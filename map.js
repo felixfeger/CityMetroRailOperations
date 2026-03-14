@@ -1,6 +1,9 @@
-// ---- Rail Diagram Map.js ----
+// ---- Metro Map.js (Full Version) ----
 
-// Block coordinates (x: horizontal, y: vertical)
+// Worker URL for D1 API
+const WORKER_URL = "https://trains-api.felixfeger46.workers.dev"; // <-- replace with your Worker URL
+
+// Block coordinates (x horizontal, y vertical)
 const blocks = {
     // A Line (Blue)
     AW_USP1:{x:80,y:50}, AW001:{x:180,y:50}, AW002:{x:280,y:50}, AW003:{x:380,y:50},
@@ -27,7 +30,7 @@ const blocks = {
     KW_ATP1:{x:450,y:350}
 };
 
-let trains = {}; // Will hold trains from DB
+let trains = {}; // trains loaded from D1
 
 const lineColors = {
     A: "#1e3a8a",
@@ -105,12 +108,12 @@ function drawStations(){
         div.className="station";
         div.innerText=s.name;
         div.style.left=s.x+"px";
-        div.style.top=(s.y - 20)+"px"; // moved above line
+        div.style.top=(s.y - 20)+"px"; // above line
         map.appendChild(div);
     }
 }
 
-// Draw a train with hover info
+// ---- DRAW TRAINS ----
 function drawTrain(train){
     let block=blocks[train.location];
     if(!block) return;
@@ -167,10 +170,9 @@ function refresh(){
     for(let t in trains) drawTrain(trains[t]);
 }
 
-// ---- CONTROLS ----
+// ---- DATABASE FUNCTIONS ----
 async function loadTrainsFromDB(){
-    // example fetch to Worker or D1 API
-    const res = await fetch("/trains"); // replace with your Worker endpoint
+    const res = await fetch(`${WORKER_URL}/trains`);
     const data = await res.json();
     trains={};
     data.forEach(t=>trains[t.number]=t);
@@ -191,7 +193,7 @@ async function addTrain(){
     trains[number]=train;
     refresh();
 
-    await fetch("/trains",{ // replace with Worker endpoint
+    await fetch(`${WORKER_URL}/trains`,{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify(train)
@@ -207,7 +209,7 @@ async function updateTrain(){
     trains[number].connected=document.getElementById("trainConnected").value;
     refresh();
 
-    await fetch("/trains",{
+    await fetch(`${WORKER_URL}/trains`,{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify(trains[number])
@@ -219,7 +221,7 @@ async function removeTrain(){
     delete trains[number];
     refresh();
 
-    await fetch(`/trains/${number}`,{method:"DELETE"});
+    await fetch(`${WORKER_URL}/trains/${number}`,{method:"DELETE"});
 }
 
 function searchTrain(){
@@ -233,5 +235,5 @@ function searchTrain(){
     document.getElementById("trainConnected").value=t.connected;
 }
 
-// Initial load
+// ---- INIT ----
 loadTrainsFromDB();
