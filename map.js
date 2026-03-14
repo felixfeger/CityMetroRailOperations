@@ -27,14 +27,13 @@ const blocks = {
     KW_ATP1:{x:450,y:350}
 };
 
-let trains = {};
+let trains = {}; // Will hold trains from DB
 
-// Line colors
 const lineColors = {
-    A: "#1e3a8a",      // Blue
-    E: "#d4af37",      // Gold
-    F: "#c2410c",      // Orange
-    K: "#ff00ff"       // Pink/Magenta
+    A: "#1e3a8a",
+    E: "#d4af37",
+    F: "#c2410c",
+    K: "#ff00ff"
 };
 
 // ---- DRAW FUNCTIONS ----
@@ -106,11 +105,12 @@ function drawStations(){
         div.className="station";
         div.innerText=s.name;
         div.style.left=s.x+"px";
-        div.style.top=s.y+"px";
+        div.style.top=(s.y - 20)+"px"; // moved above line
         map.appendChild(div);
     }
 }
 
+// Draw a train with hover info
 function drawTrain(train){
     let block=blocks[train.location];
     if(!block) return;
@@ -119,7 +119,13 @@ function drawTrain(train){
     dot.className="train";
     dot.style.left=block.x+"px";
     dot.style.top=block.y+"px";
-    dot.title="Train "+train.number+"\nModel: "+train.model+"\nRoute: "+train.route+"\nBlock: "+train.location;
+    dot.dataset.train=JSON.stringify(train);
+
+    dot.addEventListener("mouseenter", e=>{
+        showInfo(train, e.pageX, e.pageY);
+    });
+    dot.addEventListener("mouseleave", hideInfo);
+
     document.getElementById("map").appendChild(dot);
 
     if(train.connected){
@@ -127,11 +133,31 @@ function drawTrain(train){
         dot2.className="train";
         dot2.style.left=(block.x+18)+"px";
         dot2.style.top=block.y+"px";
+        dot2.dataset.train=JSON.stringify(train);
+        dot2.addEventListener("mouseenter", e=>showInfo(train,e.pageX,e.pageY));
+        dot2.addEventListener("mouseleave", hideInfo);
         document.getElementById("map").appendChild(dot2);
     }
 }
 
-// Refresh
+function showInfo(train, x, y){
+    let box=document.getElementById("infoBox");
+    if(!box){
+        box=document.createElement("div");
+        box.id="infoBox";
+        document.body.appendChild(box);
+    }
+    box.innerHTML=`Train: ${train.number}<br>Route: ${train.route}<br>Block: ${train.location}`;
+    box.style.left=x+"px";
+    box.style.top=y+"px";
+    box.style.display="block";
+}
+
+function hideInfo(){
+    const box=document.getElementById("infoBox");
+    if(box) box.style.display="none";
+}
+
 function refresh(){
     const map=document.getElementById("map");
     map.innerHTML="";
@@ -142,13 +168,21 @@ function refresh(){
 }
 
 // ---- CONTROLS ----
-function addTrain(){
+async function loadTrainsFromDB(){
+    // example fetch to Worker or D1 API
+    const res = await fetch("/trains"); // replace with your Worker endpoint
+    const data = await res.json();
+    trains={};
+    data.forEach(t=>trains[t.number]=t);
+    refresh();
+}
+
+async function addTrain(){
     let number=document.getElementById("trainNumber").value.trim();
     if(!number) return;
 
     let train={
         number:number,
-        model:document.getElementById("trainModel").value,
         route:document.getElementById("trainRoute").value,
         location:document.getElementById("trainLocation").value,
         connected:document.getElementById("trainConnected").value
@@ -156,23 +190,36 @@ function addTrain(){
 
     trains[number]=train;
     refresh();
+
+    await fetch("/trains",{ // replace with Worker endpoint
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(train)
+    });
 }
 
-function updateTrain(){
-    let num=document.getElementById("trainNumber").value;
-    if(!trains[num]) return;
+async function updateTrain(){
+    let number=document.getElementById("trainNumber").value.trim();
+    if(!trains[number]) return;
 
-    trains[num].model=document.getElementById("trainModel").value;
-    trains[num].route=document.getElementById("trainRoute").value;
-    trains[num].location=document.getElementById("trainLocation").value;
-    trains[num].connected=document.getElementById("trainConnected").value;
+    trains[number].route=document.getElementById("trainRoute").value;
+    trains[number].location=document.getElementById("trainLocation").value;
+    trains[number].connected=document.getElementById("trainConnected").value;
     refresh();
+
+    await fetch("/trains",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(trains[number])
+    });
 }
 
-function removeTrain(){
-    let num=document.getElementById("trainNumber").value;
-    delete trains[num];
+async function removeTrain(){
+    let number=document.getElementById("trainNumber").value.trim();
+    delete trains[number];
     refresh();
+
+    await fetch(`/trains/${number}`,{method:"DELETE"});
 }
 
 function searchTrain(){
@@ -181,11 +228,10 @@ function searchTrain(){
     if(!t){ alert("Train not found"); return; }
 
     document.getElementById("trainNumber").value=t.number;
-    document.getElementById("trainModel").value=t.model;
     document.getElementById("trainRoute").value=t.route;
     document.getElementById("trainLocation").value=t.location;
     document.getElementById("trainConnected").value=t.connected;
 }
 
-// Initial render
-refresh();
+// Initial load
+loadTrainsFromDB();
