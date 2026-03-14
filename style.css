@@ -1,60 +1,70 @@
 body{
+
 font-family: Helvetica, Arial, sans-serif;
 background:#111;
 color:white;
 text-align:center;
+
 }
 
-#dispatcherPanel{
-margin:20px;
-padding:10px;
+#controls{
+
 background:#222;
-border-radius:10px;
+padding:15px;
+border-radius:8px;
+width:900px;
+margin:auto;
+margin-bottom:20px;
+
 }
 
 #map{
+
 position:relative;
-width:1400px;
+width:2000px;
 height:500px;
 margin:auto;
-background:#1b1b1b;
-border:2px solid #555;
+background:#1a1a1a;
+border:2px solid #444;
+
 }
 
 .station{
+
 position:absolute;
 background:white;
 color:black;
-padding:4px 8px;
+padding:6px 10px;
 border-radius:6px;
 font-size:12px;
-text-align:center;
+
 }
 
 .block{
+
 position:absolute;
-width:10px;
-height:10px;
+width:12px;
+height:12px;
 background:white;
 border-radius:50%;
+
+}
+
+.blockLabel{
+
+position:absolute;
+font-size:10px;
+color:white;
+
 }
 
 .train{
+
 position:absolute;
 width:16px;
 height:16px;
 background:red;
 border-radius:50%;
 cursor:pointer;
-}
 
-.line{
-position:absolute;
-height:6px;
-border-radius:3px;
 }
-
-.A{background:#0072ce;}
-.E{background:#f6c600;}
-.F{background:#00a651;}
-.K{background:#7a3db8;}
