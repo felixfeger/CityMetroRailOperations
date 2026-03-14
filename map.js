@@ -1,6 +1,8 @@
-// Diagram-style map with line colors
+// ---- Rail Diagram Map.js ----
+
+// Block coordinates (x: horizontal, y: vertical)
 const blocks = {
-    // A Line (blue)
+    // A Line (Blue)
     AW_USP1:{x:80,y:50}, AW001:{x:180,y:50}, AW002:{x:280,y:50}, AW003:{x:380,y:50},
     AW_DLP2:{x:450,y:50}, AW004:{x:550,y:50}, AW005:{x:650,y:50}, AW006:{x:750,y:50},
     AW_EQP1:{x:820,y:50}, AW007:{x:920,y:50}, AW008:{x:1020,y:50}, AW009:{x:1120,y:50},
@@ -8,7 +10,7 @@ const blocks = {
     AW_DSP1:{x:1550,y:50}, AW013:{x:1650,y:50}, AW014:{x:1750,y:50}, AW015:{x:1850,y:50},
     AW_SMP1:{x:1920,y:50},
 
-    // E Line (green)
+    // E Line (Gold)
     EW_USP2:{x:80,y:150}, EW001:{x:180,y:150}, EW002:{x:280,y:150}, EW003:{x:380,y:150},
     EW_DLP2:{x:450,y:150}, EW004:{x:550,y:150}, EW005:{x:650,y:150}, EW006:{x:750,y:150},
     EW_EQP1:{x:820,y:150}, EW007:{x:920,y:150}, EW008:{x:1020,y:150}, EW009:{x:1120,y:150},
@@ -16,25 +18,26 @@ const blocks = {
     EW_DHP1:{x:1550,y:150}, EW013:{x:1650,y:150}, EW014:{x:1750,y:150}, EW015:{x:1850,y:150},
     EW_TCP1:{x:1920,y:150},
 
-    // F Line (orange)
+    // F Line (Orange)
     FW_AMP1:{x:1180,y:250}, FW001:{x:1280,y:250}, FW002:{x:1380,y:250}, FW003:{x:1480,y:250},
     FW_FTP2:{x:1580,y:250},
 
-    // K Line (purple)
+    // K Line (Pink/Magenta)
     KW_USP3:{x:80,y:350}, KW001:{x:180,y:350}, KW002:{x:280,y:350}, KW003:{x:380,y:350},
     KW_ATP1:{x:450,y:350}
 };
 
 let trains = {};
 
-// Draw lines with colors
+// Line colors
 const lineColors = {
-    A: "#1e3a8a",
-    E: "#047857",
-    F: "#c2410c",
-    K: "#6b21a8"
+    A: "#1e3a8a",      // Blue
+    E: "#d4af37",      // Gold
+    F: "#c2410c",      // Orange
+    K: "#ff00ff"       // Pink/Magenta
 };
 
+// ---- DRAW FUNCTIONS ----
 function drawLines(){
     const map = document.getElementById("map");
 
@@ -61,11 +64,11 @@ function drawLines(){
     });
 }
 
-// Blocks and labels
 function drawBlocks(){
     const map=document.getElementById("map");
     for(let id in blocks){
         let b=blocks[id];
+
         let dot=document.createElement("div");
         dot.className="block";
         dot.style.left=b.x+"px";
@@ -81,7 +84,6 @@ function drawBlocks(){
     }
 }
 
-// Stations
 function drawStations(){
     const map=document.getElementById("map");
     const stations={
@@ -109,10 +111,10 @@ function drawStations(){
     }
 }
 
-// Trains
 function drawTrain(train){
     let block=blocks[train.location];
     if(!block) return;
+
     let dot=document.createElement("div");
     dot.className="train";
     dot.style.left=block.x+"px";
@@ -139,10 +141,11 @@ function refresh(){
     for(let t in trains) drawTrain(trains[t]);
 }
 
-// Controls
+// ---- CONTROLS ----
 function addTrain(){
     let number=document.getElementById("trainNumber").value.trim();
     if(!number) return;
+
     let train={
         number:number,
         model:document.getElementById("trainModel").value,
@@ -150,6 +153,7 @@ function addTrain(){
         location:document.getElementById("trainLocation").value,
         connected:document.getElementById("trainConnected").value
     };
+
     trains[number]=train;
     refresh();
 }
@@ -157,6 +161,7 @@ function addTrain(){
 function updateTrain(){
     let num=document.getElementById("trainNumber").value;
     if(!trains[num]) return;
+
     trains[num].model=document.getElementById("trainModel").value;
     trains[num].route=document.getElementById("trainRoute").value;
     trains[num].location=document.getElementById("trainLocation").value;
@@ -174,6 +179,7 @@ function searchTrain(){
     let num=document.getElementById("searchTrain").value.trim();
     let t=trains[num];
     if(!t){ alert("Train not found"); return; }
+
     document.getElementById("trainNumber").value=t.number;
     document.getElementById("trainModel").value=t.model;
     document.getElementById("trainRoute").value=t.route;
@@ -181,4 +187,5 @@ function searchTrain(){
     document.getElementById("trainConnected").value=t.connected;
 }
 
+// Initial render
 refresh();
