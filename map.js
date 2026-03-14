@@ -658,55 +658,189 @@ function showToast(msg, type = 'info') {
 }
 
 /* ══════════════════════════════════════════════════════════
-   API
+   PERSISTENCE LAYER
+   Priority: D1 (via Worker API) — localStorage as write-ahead
+   cache and fallback. Retry queue flushes on reconnect.
    ══════════════════════════════════════════════════════════ */
-function setStatus(online) {
-  document.getElementById('status-dot').className = 'status-dot' + (online ? '' : ' offline');
-  document.getElementById('status-text').textContent = online ? 'LIVE' : 'OFFLINE';
+
+const LS_KEY      = 'citymetro_trains';
+const LS_QUEUE    = 'citymetro_retry_queue';  // pending API ops
+
+/* ── localStorage helpers ─────────────────────────────── */
+function lsSaveAll() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(trains)); } catch {}
+}
+function lsLoadAll() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch { return null; }
+}
+function lsQueueGet() {
+  try { return JSON.parse(localStorage.getItem(LS_QUEUE) || '[]'); } catch { return []; }
+}
+function lsQueueSave(q) {
+  try { localStorage.setItem(LS_QUEUE, JSON.stringify(q)); } catch {}
+}
+function lsQueueAdd(op) {
+  const q = lsQueueGet();
+  // Deduplicate: replace any existing op for same number + type
+  const filtered = q.filter(x => !(x.type === op.type && x.number === op.number));
+  filtered.push(op);
+  lsQueueSave(filtered);
+}
+function lsQueueRemove(op) {
+  const q = lsQueueGet().filter(x => !(x.type === op.type && x.number === op.number));
+  lsQueueSave(q);
 }
 
+/* ── Status indicator ─────────────────────────────────── */
+function setStatus(state) {
+  // state: 'live' | 'offline' | 'syncing' | 'pending'
+  const dot  = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  dot.className = 'status-dot';
+  if (state === 'live')    { text.textContent = 'LIVE'; }
+  else if (state === 'pending') { dot.className = 'status-dot pending'; text.textContent = 'PENDING'; }
+  else if (state === 'syncing') { dot.className = 'status-dot syncing'; text.textContent = 'SYNCING…'; }
+  else                     { dot.className = 'status-dot offline';  text.textContent = 'OFFLINE'; }
+}
+
+/* ── Raw API calls ────────────────────────────────────── */
+async function _apiPost(train) {
+  const res = await fetch(`${API_BASE}/trains`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(train),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+}
+
+async function _apiDel(number) {
+  const res = await fetch(`${API_BASE}/trains/${encodeURIComponent(number)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok && res.status !== 404) throw new Error(`HTTP ${res.status}`);
+}
+
+/* ── Save a train (write-ahead to localStorage, then API) ─ */
+async function persistSave(train) {
+  // 1. Write-ahead: save to localStorage immediately
+  trains[train.number] = train;
+  lsSaveAll();
+
+  // 2. Queue the op (in case API call fails)
+  lsQueueAdd({ type: 'save', number: train.number, data: train });
+
+  // 3. Try the API
+  try {
+    await _apiPost(train);
+    lsQueueRemove({ type: 'save', number: train.number });
+    setStatus(lsQueueGet().length ? 'pending' : 'live');
+  } catch {
+    setStatus('pending');
+    scheduleRetry();
+  }
+}
+
+/* ── Delete a train (write-ahead, then API) ──────────────── */
+async function persistDelete(number) {
+  // 1. Write-ahead: remove from localStorage
+  delete trains[number];
+  lsSaveAll();
+
+  // 2. Remove any pending save for this number, add a delete op
+  const q = lsQueueGet().filter(x => !(x.type === 'save' && x.number === number));
+  q.push({ type: 'delete', number });
+  lsQueueSave(q);
+
+  // 3. Try the API
+  try {
+    await _apiDel(number);
+    lsQueueRemove({ type: 'delete', number });
+    setStatus(lsQueueGet().length ? 'pending' : 'live');
+  } catch {
+    setStatus('pending');
+    scheduleRetry();
+  }
+}
+
+/* ── Retry queue flush ───────────────────────────────────── */
+let _retryTimer = null;
+function scheduleRetry() {
+  if (_retryTimer) return;
+  _retryTimer = setTimeout(flushRetryQueue, 10000); // retry after 10s
+}
+
+async function flushRetryQueue() {
+  _retryTimer = null;
+  const q = lsQueueGet();
+  if (!q.length) { setStatus('live'); return; }
+
+  setStatus('syncing');
+  let remaining = [...q];
+
+  for (const op of q) {
+    try {
+      if (op.type === 'save')   await _apiPost(op.data);
+      if (op.type === 'delete') await _apiDel(op.number);
+      remaining = remaining.filter(x => !(x.type === op.type && x.number === op.number));
+    } catch {
+      // leave it in the queue, try again later
+    }
+  }
+
+  lsQueueSave(remaining);
+
+  if (remaining.length) {
+    setStatus('pending');
+    scheduleRetry(); // try again
+  } else {
+    setStatus('live');
+    showToast('All trains synced to server ✓', 'success');
+  }
+}
+
+/* ── Load trains on page start ───────────────────────────── */
 async function loadTrains() {
+  setStatus('syncing');
+
+  let fromAPI = false;
+
   try {
     const res = await fetch(`${API_BASE}/trains`);
     if (!res.ok) throw new Error();
     const data = await res.json();
+
+    // API success — use server data as source of truth
     trains = {};
     for (const t of data) trains[t.number] = t;
-    setStatus(true);
+    fromAPI = true;
+
+    // Merge in any locally queued trains that haven't reached the server yet
+    const pending = lsQueueGet().filter(x => x.type === 'save');
+    for (const op of pending) {
+      if (!trains[op.number]) trains[op.number] = op.data;
+    }
+
+    // Overwrite localStorage with merged state
+    lsSaveAll();
+
+    const pendingCount = lsQueueGet().length;
+    setStatus(pendingCount ? 'pending' : 'live');
+    if (pendingCount) {
+      flushRetryQueue(); // attempt to push any queued ops
+    }
+
   } catch {
-    setStatus(false);
+    // API unavailable — fall back to localStorage
+    const cached = lsLoadAll();
+    if (cached && Object.keys(cached).length) {
+      trains = cached;
+      showToast('Loaded from local cache — server unreachable', 'info');
+    }
+    setStatus('offline');
+    scheduleRetry();
   }
+
   renderTrains();
-}
-
-async function apiSave(train) {
-  try {
-    const res = await fetch(`${API_BASE}/trains`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(train),
-    });
-    if (!res.ok) throw new Error();
-    setStatus(true);
-    return true;
-  } catch {
-    setStatus(false);
-    return false;
-  }
-}
-
-async function apiDelete(number) {
-  try {
-    const res = await fetch(`${API_BASE}/trains/${encodeURIComponent(number)}`, {
-      method: 'DELETE',
-    });
-    if (!res.ok) throw new Error();
-    setStatus(true);
-    return true;
-  } catch {
-    setStatus(false);
-    return false;
-  }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -725,17 +859,15 @@ async function addTrain() {
   if (trains[number]) return showToast(`Train #${number} already exists`, 'error');
 
   const train = { number, route, location, connected, coupled_with: coupleWith || null };
-  trains[number] = train;
 
   if (coupleWith) {
     if (!trains[coupleWith]) return showToast(`Train #${coupleWith} not found — add it first`, 'error');
-    // Link both
     train.coupled_with = coupleWith;
     trains[coupleWith].coupled_with = number;
-    await apiSave(trains[coupleWith]);
+    await persistSave(trains[coupleWith]);
   }
 
-  const ok = await apiSave(train);
+  await persistSave(train);
   renderTrains();
 
   // Reset form
@@ -744,10 +876,8 @@ async function addTrain() {
   document.getElementById('inp-block').innerHTML = '<option value="">— Select Line First —</option>';
 
   showToast(
-    ok
-      ? `Train #${number} added${coupleWith ? ` (coupled with #${coupleWith})` : ''}`
-      : `Train #${number} added (not saved — offline)`,
-    ok ? 'success' : 'info'
+    `Train #${number} added${coupleWith ? ` (coupled with #${coupleWith})` : ''} ✓`,
+    'success'
   );
 }
 
@@ -758,11 +888,10 @@ async function removeTrain(number) {
   // Uncouple partner if any
   if (train.coupled_with && trains[train.coupled_with]) {
     trains[train.coupled_with].coupled_with = null;
-    await apiSave(trains[train.coupled_with]);
+    await persistSave(trains[train.coupled_with]);
   }
 
-  delete trains[number];
-  await apiDelete(number);
+  await persistDelete(number);
   renderTrains();
   showToast(`Train #${number} removed`, 'success');
 }
@@ -775,16 +904,16 @@ async function coupleTrains(aNum, bNum) {
 
   a.coupled_with = bNum;
   b.coupled_with = aNum;
-  await apiSave(a);
-  await apiSave(b);
+  await persistSave(a);
+  await persistSave(b);
   renderTrains();
   showToast(`#${aNum} and #${bNum} coupled`, 'success');
 }
 
 async function splitTrains(aNum, bNum) {
   const a = trains[aNum], b = trains[bNum];
-  if (a) { a.coupled_with = null; await apiSave(a); }
-  if (b) { b.coupled_with = null; await apiSave(b); }
+  if (a) { a.coupled_with = null; await persistSave(a); }
+  if (b) { b.coupled_with = null; await persistSave(b); }
   renderTrains();
   showToast(`#${aNum} and #${bNum} split`, 'success');
 }
