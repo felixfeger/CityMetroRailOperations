@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <meta charset="UTF-8">
@@ -9,16 +10,18 @@
 
 </head>
 
-<body>
+<body class="dark">
 
 <h1>City Metro Rail Dispatcher</h1>
+
+<button onclick="toggleTheme()">Toggle Light / Dark Mode</button>
 
 <div id="controls">
 
 Train Number
 <input id="trainNumber">
 
-Train Model
+Model
 <input id="trainModel">
 
 Route
@@ -42,29 +45,27 @@ Search Train
 
 </div>
 
-<div id="map">
+<div id="container">
 
-<!-- STATIONS -->
+<div id="map"></div>
 
-<div class="station" style="left:50px;top:200px;">Union Station<br>USP1</div>
+<div id="key">
 
-<div class="station" style="left:400px;top:200px;">Downtown Lego City<br>DLP2</div>
+<h3>Station Code Key</h3>
 
-<div class="station" style="left:750px;top:200px;">Emergency HQ<br>EQP1</div>
+USP1 — Union Station Platform 1  
+USP3 — Union Station Platform 3  
+DLP2 — Downtown Lego City  
+EQP1 — Emergency HQ  
+AMP1 — Airport Metro Transit Center  
+DSP1 — Death Star City  
+SMP1 — Downtown Santa Mooica  
+DHP1 — Desktop Hills  
+TCP1 — Table Central  
+ATP1 — Asiantown  
+FTP2 — FLX Terminal  
 
-<div class="station" style="left:1100px;top:200px;">Airport Metro Transit Center<br>AMP1 / AMP2</div>
-
-<div class="station" style="left:1450px;top:200px;">Death Star City<br>DSP1 / DSP2</div>
-
-<div class="station" style="left:1800px;top:200px;">Downtown Santa Mooica<br>SMP1 / SMP2</div>
-
-<div class="station" style="left:1450px;top:350px;">Desktop Hills<br>DHP1 / DHP2</div>
-
-<div class="station" style="left:1800px;top:350px;">Table Central<br>TCP1 / TCP2</div>
-
-<div class="station" style="left:400px;top:80px;">Asiantown<br>ATP1</div>
-
-<div class="station" style="left:1100px;top:350px;">FLX Terminal<br>FTP2</div>
+</div>
 
 </div>
 
