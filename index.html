@@ -121,7 +121,9 @@
       background: var(--green); box-shadow: 0 0 0 2px rgba(22,163,74,.2);
       animation: blink 2.5s infinite;
     }
-    .status-dot.offline { background: var(--red); box-shadow: 0 0 0 2px rgba(220,38,38,.2); animation: none; }
+    .status-dot.offline  { background: var(--red);    box-shadow: 0 0 0 2px rgba(220,38,38,.2);  animation: none; }
+    .status-dot.pending  { background: #d97706;        box-shadow: 0 0 0 2px rgba(217,119,6,.2);  animation: blink 1.2s infinite; }
+    .status-dot.syncing  { background: var(--accent);  box-shadow: 0 0 0 2px rgba(37,99,235,.2);  animation: blink 0.6s infinite; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
     /* ══ LAYOUT ══════════════════════════════════════════ */
