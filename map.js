@@ -59,7 +59,7 @@ const NETWORK = {
     name: 'E Line',
     colorHex: '#b45309',
     doubleTrack: true,
-    route: 'Union Station  ←→  Santa Mooica  (via Emergency HQ)',
+    route: 'Union Station  ←→  Table Central  (via Emergency HQ)',
     nodes: [
       // Union → DLC: physically shared track with A (use A-prefix per convention)
       { t:'stn', name:'Union Station',
@@ -81,18 +81,18 @@ const NETWORK = {
       // EHQ → Airport: back to shared/A track (crossover)
       { t:'stn', name:'Airport Metro TC',
         wb:{ id:'AW_AMP2', p:'P2' },  eb:{ id:'AE_AMP1', p:'P1' }, shared:true },
-      // Airport → terminus: E-line's own tracks
+      // Airport → terminus: E-line's own tracks (branch to Desktop Hills / Table Central)
       { t:'blk',
         wb:['EW007','EW008','EW009','EW010','EW011'],
         eb:['EE007','EE008','EE009','EE010','EE011'],
-        note:'Airport Metro → Death Star' },
-      { t:'stn', name:'Death Star City',
-        wb:{ id:'EW_DSP2', p:'P2' },  eb:{ id:'EE_DSP1', p:'P1' } },
+        note:'Airport Metro → Desktop Hills' },
+      { t:'stn', name:'Desktop Hills',
+        wb:{ id:'EW_DHP2', p:'P2' },  eb:{ id:'EE_DHP1', p:'P1' } },
       { t:'blk',
         wb:['EW012','EW013','EW014'],  eb:['EE012','EE013','EE014'],
-        note:'Death Star → Santa Mooica' },
-      { t:'stn', name:'Santa Mooica',
-        wb:{ id:'EW_SMP2', p:'P2' },  eb:{ id:'EE_SMP1', p:'P1' } },
+        note:'Desktop Hills → Table Central' },
+      { t:'stn', name:'Table Central',
+        wb:{ id:'EW_TCP2', p:'P2' },  eb:{ id:'EE_TCP1', p:'P1' } },
     ],
   },
 
