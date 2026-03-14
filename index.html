@@ -8,57 +8,54 @@
 <body>
 
 <header>
-<h1>City Metro Rail Diagram</h1>
+    <h1>City Metro Rail Diagram</h1>
 </header>
 
 <div id="controls">
-<h3>Train Controls</h3>
+    <h3>Train Controls</h3>
 
-<label>Train Number</label>
-<input id="trainNumber">
+    <label>Train Number</label>
+    <input id="trainNumber">
 
-<label>Model</label>
-<input id="trainModel">
+    <label>Route</label>
+    <input id="trainRoute">
 
-<label>Route</label>
-<input id="trainRoute">
+    <label>Block</label>
+    <input id="trainLocation">
 
-<label>Block</label>
-<input id="trainLocation">
+    <label>Connected Train</label>
+    <input id="trainConnected">
 
-<label>Connected Train</label>
-<input id="trainConnected">
+    <div class="buttons">
+        <button onclick="addTrain()">Add Train</button>
+        <button onclick="updateTrain()">Update Train</button>
+        <button onclick="removeTrain()">Remove Train</button>
+    </div>
 
-<div class="buttons">
-<button onclick="addTrain()">Add Train</button>
-<button onclick="updateTrain()">Update Train</button>
-<button onclick="removeTrain()">Remove Train</button>
-</div>
+    <hr>
 
-<hr>
-
-<label>Search Train</label>
-<input id="searchTrain">
-<button onclick="searchTrain()">Search</button>
+    <label>Search Train</label>
+    <input id="searchTrain">
+    <button onclick="searchTrain()">Search</button>
 </div>
 
 <div id="layout">
-<div id="map"></div>
+    <div id="map"></div>
 
-<div id="key">
-<h3>Station Codes</h3>
-<p><b>USP1</b> — Union Station P1</p>
-<p><b>USP3</b> — Union Station P3</p>
-<p><b>DLP2</b> — Downtown Lego City</p>
-<p><b>EQP1</b> — Emergency HQ</p>
-<p><b>AMP1</b> — Airport Metro Transit Center</p>
-<p><b>DSP1</b> — Death Star City</p>
-<p><b>SMP1</b> — Downtown Santa Mooica</p>
-<p><b>DHP1</b> — Desktop Hills</p>
-<p><b>TCP1</b> — Table Central</p>
-<p><b>ATP1</b> — Asiantown</p>
-<p><b>FTP2</b> — FLX Terminal</p>
-</div>
+    <div id="key">
+        <h3>Station Codes</h3>
+        <p><b>USP1</b> — Union Station P1</p>
+        <p><b>USP3</b> — Union Station P3</p>
+        <p><b>DLP2</b> — Downtown Lego City</p>
+        <p><b>EQP1</b> — Emergency HQ</p>
+        <p><b>AMP1</b> — Airport Metro Transit Center</p>
+        <p><b>DSP1</b> — Death Star City</p>
+        <p><b>SMP1</b> — Downtown Santa Mooica</p>
+        <p><b>DHP1</b> — Desktop Hills</p>
+        <p><b>TCP1</b> — Table Central</p>
+        <p><b>ATP1</b> — Asiantown</p>
+        <p><b>FTP2</b> — FLX Terminal</p>
+    </div>
 </div>
 
 <script src="map.js"></script>
