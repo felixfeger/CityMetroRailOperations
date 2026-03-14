@@ -1,22 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta charset="UTF-8">
-<title> City Metro Dispatch Map</title>
+<title>City Metro Dispatcher</title>
+
 <link rel="stylesheet" href="style.css">
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
-
-<script src="firebase.js"></script>
-<script src="map.js"></script>
 </head>
 
 <body>
 
 <h1>City Metro Rail Dispatcher</h1>
 
-<div id="dispatcherPanel">
+<div id="controls">
 
 Train Number
 <input id="trainNumber">
@@ -27,15 +24,15 @@ Train Model
 Route
 <input id="trainRoute">
 
-Location Block
+Block
 <input id="trainLocation">
 
 Connected Train
 <input id="trainConnected">
 
-<button onclick="addTrain()">Add Train</button>
-<button onclick="updateTrain()">Update Train</button>
-<button onclick="removeTrain()">Remove Train</button>
+<button onclick="addTrain()">Add</button>
+<button onclick="updateTrain()">Update</button>
+<button onclick="removeTrain()">Remove</button>
 
 <br><br>
 
@@ -45,7 +42,33 @@ Search Train
 
 </div>
 
-<div id="map"></div>
+<div id="map">
+
+<!-- STATIONS -->
+
+<div class="station" style="left:50px;top:200px;">Union Station<br>USP1</div>
+
+<div class="station" style="left:400px;top:200px;">Downtown Lego City<br>DLP2</div>
+
+<div class="station" style="left:750px;top:200px;">Emergency HQ<br>EQP1</div>
+
+<div class="station" style="left:1100px;top:200px;">Airport Metro Transit Center<br>AMP1 / AMP2</div>
+
+<div class="station" style="left:1450px;top:200px;">Death Star City<br>DSP1 / DSP2</div>
+
+<div class="station" style="left:1800px;top:200px;">Downtown Santa Mooica<br>SMP1 / SMP2</div>
+
+<div class="station" style="left:1450px;top:350px;">Desktop Hills<br>DHP1 / DHP2</div>
+
+<div class="station" style="left:1800px;top:350px;">Table Central<br>TCP1 / TCP2</div>
+
+<div class="station" style="left:400px;top:80px;">Asiantown<br>ATP1</div>
+
+<div class="station" style="left:1100px;top:350px;">FLX Terminal<br>FTP2</div>
+
+</div>
+
+<script src="map.js"></script>
 
 </body>
 </html>
