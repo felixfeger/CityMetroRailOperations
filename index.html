@@ -1,62 +1,626 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>City Metro Rail Diagram</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>City Metro Rail — Dispatch Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #eef1f6;
+      --surface:  #ffffff;
+      --surface2: #f8fafc;
+      --border:   #dde3ec;
+      --border2:  #c8d1de;
+      --text:     #0f172a;
+      --text2:    #334155;
+      --muted:    #64748b;
+      --muted2:   #94a3b8;
+      --accent:   #2563eb;
+      --green:    #16a34a;
+      --red:      #dc2626;
+      --purple:   #7c3aed;
+      --a-line:   #2563eb;
+      --e-line:   #b45309;
+      --f-line:   #c2410c;
+      --k-line:   #be185d;
+      --shadow:   0 1px 4px rgba(15,23,42,.08), 0 4px 12px rgba(15,23,42,.05);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ══ HEADER ══════════════════════════════════════════ */
+    header {
+      height: 54px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+      flex-shrink: 0;
+      box-shadow: 0 1px 0 var(--border);
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    }
+    .logo-mark {
+      width: 32px; height: 32px;
+      background: var(--a-line);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 16px;
+    }
+    .logo-text h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 16px; font-weight: 700;
+      letter-spacing: 0.07em; text-transform: uppercase; line-height: 1.1;
+      color: var(--text);
+    }
+    .logo-text p {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px; color: var(--muted); letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .header-sep { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
+
+    .search-wrap { flex: 1; max-width: 300px; position: relative; }
+    .search-wrap svg {
+      position: absolute; left: 10px; top: 50%;
+      transform: translateY(-50%); color: var(--muted2);
+      pointer-events: none;
+    }
+    #search-box {
+      width: 100%;
+      background: var(--bg); border: 1px solid var(--border);
+      color: var(--text); font-family: 'DM Mono', monospace;
+      font-size: 12px; padding: 7px 10px 7px 32px;
+      border-radius: 6px; outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    #search-box:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+    #search-box::placeholder { color: var(--muted2); }
+    #search-clear {
+      position: absolute; right: 8px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; color: var(--muted2);
+      cursor: pointer; font-size: 14px; line-height: 1;
+      display: none; padding: 2px;
+    }
+    #search-clear:hover { color: var(--text); }
+
+    .header-right { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+
+    .stat-pill {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 20px; padding: 4px 12px;
+      font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .stat-pill strong { color: var(--text); }
+
+    .status-wrap {
+      display: flex; align-items: center; gap: 7px;
+      font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted);
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 0 2px rgba(22,163,74,.2);
+      animation: blink 2.5s infinite;
+    }
+    .status-dot.offline { background: var(--red); box-shadow: 0 0 0 2px rgba(220,38,38,.2); animation: none; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* ══ LAYOUT ══════════════════════════════════════════ */
+    .app-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* ══ SIDEBAR ════════════════════════════════════════ */
+    .sidebar {
+      width: 268px; flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      overflow-y: auto;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    .sb-block { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+
+    .sb-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+    }
+
+    .field { margin-bottom: 9px; }
+    .field label {
+      display: block; font-size: 11px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+    .field input, .field select {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      color: var(--text); font-family: 'DM Mono', monospace;
+      font-size: 12px; padding: 7px 9px; border-radius: 6px;
+      outline: none; transition: border-color .2s, box-shadow .2s;
+      appearance: none;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+    }
+    .field input::placeholder { color: var(--muted2); }
+    .field select option { background: white; }
+
+    /* Coupling section - shows when A line selected */
+    #couple-section { display: none; }
+    #couple-section.visible { display: block; }
+    .couple-divider {
+      display: flex; align-items: center; gap: 8px;
+      margin: 8px 0;
+      font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace;
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .couple-divider::before, .couple-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    .btn {
+      width: 100%; padding: 8px 12px; border-radius: 6px; border: none;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700;
+      letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer;
+      transition: filter .15s, transform .1s; margin-top: 4px;
+    }
+    .btn:hover { filter: brightness(0.92); }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-danger  { background: #fef2f2; color: var(--red); border: 1px solid #fecaca; }
+    .btn-purple  { background: #f5f3ff; color: var(--purple); border: 1px solid #ddd6fe; }
+
+    /* Train list */
+    #train-list { display: flex; flex-direction: column; gap: 7px; }
+
+    .train-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 11px;
+      display: flex; align-items: flex-start; gap: 9px;
+      cursor: pointer; transition: border-color .15s, box-shadow .15s;
+    }
+    .train-card:hover { border-color: var(--border2); box-shadow: var(--shadow); }
+    .train-card.highlight { border-color: var(--accent); background: #eff6ff; }
+    .train-card.coupled-card { border-color: #ddd6fe; background: #f5f3ff; }
+    .train-card.coupled-card.highlight { border-color: var(--purple); }
+
+    .tc-indicator {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--red); flex-shrink: 0; margin-top: 2px;
+      box-shadow: 0 0 0 2px rgba(220,38,38,.15);
+    }
+    .tc-indicator.coupled { background: var(--purple); box-shadow: 0 0 0 2px rgba(124,58,237,.15); }
+    .tc-info { flex: 1; min-width: 0; }
+    .tc-num {
+      font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500;
+      color: var(--text); line-height: 1.2;
+    }
+    .tc-meta { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
+    .tc-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .tc-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--muted); cursor: pointer; font-size: 10px;
+      padding: 3px 7px; border-radius: 4px; line-height: 1;
+      font-family: 'DM Mono', monospace; transition: all .15s;
+    }
+    .tc-btn:hover { border-color: var(--border2); color: var(--text); }
+    .tc-btn.remove:hover { border-color: #fecaca; color: var(--red); background: #fef2f2; }
+    .tc-btn.split:hover { border-color: #ddd6fe; color: var(--purple); background: #f5f3ff; }
+
+    .empty-state {
+      font-family: 'DM Mono', monospace; font-size: 11px;
+      color: var(--muted2); text-align: center; padding: 12px 0;
+    }
+
+    /* Legend */
+    .legend-lines { display: flex; flex-direction: column; gap: 7px; }
+    .legend-line { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text2); }
+    .legend-swatch { width: 24px; height: 4px; border-radius: 2px; flex-shrink: 0; }
+    .legend-stations { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; }
+    .legend-stn { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
+    .legend-stn b { color: var(--text2); }
+
+    /* ══ MAP AREA ════════════════════════════════════════ */
+    .map-area { flex: 1; overflow: auto; padding: 28px 28px 48px; }
+    .map-area::-webkit-scrollbar { height: 6px; width: 6px; }
+    .map-area::-webkit-scrollbar-track { background: transparent; }
+    .map-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    #rail-diagram { min-width: 1100px; }
+
+    /* Line rows */
+    .line-row { margin-bottom: 40px; }
+
+    .line-header {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    }
+    .lh-pip { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .lh-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 14px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+    }
+    .lh-route {
+      font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted);
+      margin-left: 4px;
+    }
+    .lh-badge {
+      margin-left: auto;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 4px; padding: 2px 8px;
+      font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted);
+    }
+
+    /* Track section wrapper */
+    .track-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px 16px;
+      box-shadow: var(--shadow);
+    }
+
+    /* The row that has the direction label + track row together */
+    .track-with-dir {
+      display: flex; align-items: center; gap: 0; margin-bottom: 4px;
+    }
+    .track-with-dir:last-child { margin-bottom: 0; }
+
+    .dir-label {
+      width: 44px; flex-shrink: 0;
+      font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted);
+      text-align: right; padding-right: 10px; letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    /* Names row - same flex structure as track rows */
+    .names-with-dir {
+      display: flex; align-items: flex-end; margin-bottom: 4px;
+    }
+    .names-spacer { width: 44px; flex-shrink: 0; }
+    .names-row {
+      flex: 1; display: flex; align-items: flex-end;
+    }
+    .name-stn-slot {
+      width: 80px; flex-shrink: 0;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--text2);
+      text-align: center; padding-bottom: 4px;
+      line-height: 1.2;
+    }
+    .name-blk-slot {
+      flex: 1; position: relative; text-align: center; padding-bottom: 4px;
+    }
+    .blk-zone-note {
+      font-family: 'DM Mono', monospace; font-size: 8px; color: var(--muted2);
+      letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap;
+    }
+
+    /* ── Track row ── */
+    .track-row {
+      flex: 1; display: flex; align-items: center;
+      height: 40px; position: relative;
+    }
+
+    /* The rail line behind everything */
+    .track-row::before {
+      content: ''; position: absolute;
+      top: 50%; left: 0; right: 0; height: 4px;
+      transform: translateY(-50%);
+      background: var(--lc, #888);
+      z-index: 0; border-radius: 2px;
+      opacity: 0.55;
+    }
+
+    /* Station cell */
+    .stn-cell {
+      width: 80px; flex-shrink: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      position: relative; z-index: 2; height: 40px;
+    }
+    .stn-circle {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: white; border: 3px solid var(--lc, #888);
+      flex-shrink: 0;
+    }
+    .stn-id {
+      font-family: 'DM Mono', monospace; font-size: 7.5px;
+      color: var(--muted2); margin-top: 3px;
+      white-space: nowrap; letter-spacing: -0.01em;
+    }
+
+    /* Block group */
+    .blk-group {
+      flex: 1; display: flex; align-items: center;
+      gap: 3px; padding: 0 4px;
+      position: relative; z-index: 1;
+    }
+
+    /* Individual block cell */
+    .blk-cell {
+      flex: 1; min-width: 42px;
+      height: 28px;
+      background: white; border: 1.5px solid var(--lc, #888);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'DM Mono', monospace; font-size: 8.5px;
+      color: var(--text2); position: relative;
+      transition: background .18s, border-color .18s, box-shadow .18s;
+      cursor: default;
+      white-space: nowrap; overflow: hidden;
+    }
+    .blk-cell.occupied {
+      background: #fef2f2; border-color: var(--red);
+      box-shadow: 0 0 0 2px rgba(220,38,38,.15);
+      color: #b91c1c;
+    }
+    .blk-cell.coupled-occ {
+      background: #f5f3ff; border-color: var(--purple);
+      box-shadow: 0 0 0 2px rgba(124,58,237,.15);
+      color: #6d28d9;
+    }
+    .blk-cell.search-hit {
+      background: #eff6ff; border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(37,99,235,.2);
+      color: #1d4ed8;
+    }
+    /* Bidir (single-track bidirectional) style */
+    .blk-cell.bidir {
+      background: repeating-linear-gradient(
+        45deg, #f8fafc, #f8fafc 3px, #eef2f7 3px, #eef2f7 6px
+      );
+      border-style: dashed; opacity: 0.6;
+      pointer-events: none;
+    }
+
+    /* Train badge on block */
+    .train-badge {
+      position: absolute; top: -18px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--red); color: white;
+      font-family: 'DM Mono', monospace; font-size: 9px;
+      border-radius: 10px; padding: 1px 6px;
+      white-space: nowrap; cursor: pointer; z-index: 20;
+      box-shadow: 0 1px 4px rgba(220,38,38,.4);
+      transition: transform .15s;
+    }
+    .train-badge:hover { transform: translateX(-50%) scale(1.15); }
+    .train-badge.coupled-badge {
+      background: var(--purple);
+      box-shadow: 0 1px 4px rgba(124,58,237,.4);
+    }
+    @keyframes badgePop { from{transform:translateX(-50%) scale(0)} to{transform:translateX(-50%) scale(1)} }
+    .train-badge { animation: badgePop .2s ease; }
+
+    /* Station badge (train on a station cell) */
+    .stn-cell .train-badge { top: -22px; }
+
+    /* Double-track gap */
+    .track-gap { height: 6px; }
+
+    /* Bidir section label */
+    .bidir-label {
+      font-family: 'DM Mono', monospace; font-size: 8px; color: var(--muted2);
+      text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.8;
+    }
+
+    /* ── Tooltip ── */
+    #tooltip {
+      position: fixed; display: none;
+      background: white; border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px;
+      pointer-events: none; z-index: 9999;
+      box-shadow: 0 8px 24px rgba(15,23,42,.15);
+      min-width: 180px;
+    }
+    .tt-num {
+      font-family: 'DM Mono', monospace; font-size: 14px;
+      font-weight: 500; color: var(--text); margin-bottom: 8px;
+      padding-bottom: 8px; border-bottom: 1px solid var(--border);
+    }
+    .tt-coupled {
+      font-family: 'DM Mono', monospace; font-size: 10px;
+      color: var(--purple); margin-bottom: 6px;
+    }
+    .tt-row {
+      display: flex; justify-content: space-between; gap: 16px;
+      font-size: 11px; color: var(--muted); margin-top: 4px;
+    }
+    .tt-row span { font-family: 'DM Mono', monospace; color: var(--text2); }
+    .tt-line-pip {
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; margin-right: 4px; vertical-align: middle;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 20px; right: 20px;
+      background: white; border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 16px; font-size: 12px;
+      z-index: 9998; opacity: 0; transform: translateY(8px);
+      transition: opacity .2s, transform .2s; pointer-events: none;
+      box-shadow: var(--shadow); display: flex; align-items: center; gap: 8px;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { border-left: 3px solid var(--green); }
+    #toast.error   { border-left: 3px solid var(--red); }
+    #toast.info    { border-left: 3px solid var(--accent); }
+  </style>
 </head>
 <body>
 
+<!-- HEADER -->
 <header>
-    <h1>City Metro Rail Diagram</h1>
+  <div class="logo">
+    <div class="logo-mark">🚇</div>
+    <div class="logo-text">
+      <h1>City Metro Rail</h1>
+      <p>Dispatch Control</p>
+    </div>
+  </div>
+
+  <div class="header-sep"></div>
+
+  <div class="search-wrap">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="search-box" placeholder="Search train # or block ID…" autocomplete="off"/>
+    <button id="search-clear">✕</button>
+  </div>
+
+  <div class="header-right">
+    <div class="stat-pill">Trains active: <strong id="train-count">0</strong></div>
+    <div class="status-wrap">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">LIVE</span>
+    </div>
+  </div>
 </header>
 
-<div id="controls">
-    <h3>Train Controls</h3>
+<!-- APP BODY -->
+<div class="app-body">
 
-    <label>Train Number</label>
-    <input id="trainNumber">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
 
-    <label>Route</label>
-    <input id="trainRoute">
+    <!-- ADD TRAIN -->
+    <div class="sb-block">
+      <div class="sb-label">Add Train</div>
+      <div class="field">
+        <label>Train Number</label>
+        <input type="text" id="inp-num" placeholder="e.g. 749" maxlength="12"/>
+      </div>
+      <div class="field">
+        <label>Line</label>
+        <select id="inp-line">
+          <option value="">— Select Line —</option>
+          <option value="A">A Line (Blue)</option>
+          <option value="E">E Line (Gold)</option>
+          <option value="F">F Line (Orange)</option>
+          <option value="K">K Line (Magenta)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Location (Block / Station)</label>
+        <select id="inp-block">
+          <option value="">— Select Line First —</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Connection</label>
+        <select id="inp-connected">
+          <option value="1">Connected</option>
+          <option value="0">No Signal</option>
+        </select>
+      </div>
 
-    <label>Block</label>
-    <input id="trainLocation">
+      <!-- A-line coupling section -->
+      <div id="couple-section">
+        <div class="couple-divider">Optional Couple</div>
+        <div class="field">
+          <label>Couple with Train #</label>
+          <input type="text" id="inp-couple" placeholder="2nd unit (e.g. 750)" maxlength="12"/>
+        </div>
+      </div>
 
-    <label>Connected Train</label>
-    <input id="trainConnected">
-
-    <div class="buttons">
-        <button onclick="addTrain()">Add Train</button>
-        <button onclick="updateTrain()">Update Train</button>
-        <button onclick="removeTrain()">Remove Train</button>
+      <button class="btn btn-primary" id="btn-add">+ Add Train</button>
     </div>
 
-    <hr>
-
-    <label>Search Train</label>
-    <input id="searchTrain">
-    <button onclick="searchTrain()">Search</button>
-</div>
-
-<div id="layout">
-    <div id="map"></div>
-
-    <div id="key">
-        <h3>Station Codes</h3>
-        <p><b>USP1</b> — Union Station P1</p>
-        <p><b>USP3</b> — Union Station P3</p>
-        <p><b>DLP2</b> — Downtown Lego City</p>
-        <p><b>EQP1</b> — Emergency HQ</p>
-        <p><b>AMP1</b> — Airport Metro Transit Center</p>
-        <p><b>DSP1</b> — Death Star City</p>
-        <p><b>SMP1</b> — Downtown Santa Mooica</p>
-        <p><b>DHP1</b> — Desktop Hills</p>
-        <p><b>TCP1</b> — Table Central</p>
-        <p><b>ATP1</b> — Asiantown</p>
-        <p><b>FTP2</b> — FLX Terminal</p>
+    <!-- REMOVE TRAIN -->
+    <div class="sb-block">
+      <div class="sb-label">Remove Train</div>
+      <div class="field">
+        <input type="text" id="inp-remove" placeholder="Train number…" maxlength="12"/>
+      </div>
+      <button class="btn btn-danger" id="btn-remove">Remove Train</button>
     </div>
+
+    <!-- COUPLE TWO EXISTING -->
+    <div class="sb-block">
+      <div class="sb-label">Couple / Split</div>
+      <div class="field">
+        <label>Train A</label>
+        <input type="text" id="inp-cpl-a" placeholder="e.g. 749" maxlength="12"/>
+      </div>
+      <div class="field">
+        <label>Train B</label>
+        <input type="text" id="inp-cpl-b" placeholder="e.g. 750" maxlength="12"/>
+      </div>
+      <button class="btn btn-purple" id="btn-couple">Couple Trains</button>
+    </div>
+
+    <!-- ACTIVE TRAINS -->
+    <div class="sb-block" style="flex:1">
+      <div class="sb-label">Active Trains</div>
+      <div id="train-list"><div class="empty-state">No trains on network</div></div>
+    </div>
+
+    <!-- LEGEND: LINES -->
+    <div class="sb-block">
+      <div class="sb-label">Lines</div>
+      <div class="legend-lines">
+        <div class="legend-line"><div class="legend-swatch" style="background:var(--a-line)"></div>A Line — Blue</div>
+        <div class="legend-line"><div class="legend-swatch" style="background:var(--e-line)"></div>E Line — Gold</div>
+        <div class="legend-line"><div class="legend-swatch" style="background:var(--f-line)"></div>F Line — Orange</div>
+        <div class="legend-line"><div class="legend-swatch" style="background:var(--k-line)"></div>K Line — Magenta</div>
+      </div>
+    </div>
+
+    <!-- LEGEND: STATIONS -->
+    <div class="sb-block">
+      <div class="sb-label">Station Codes</div>
+      <div class="legend-stations">
+        <div class="legend-stn"><b>USP</b> Union Stn</div>
+        <div class="legend-stn"><b>DLP</b> Downtown LC</div>
+        <div class="legend-stn"><b>EQP</b> Emergency HQ</div>
+        <div class="legend-stn"><b>AMP</b> Airport Metro</div>
+        <div class="legend-stn"><b>DSP</b> Death Star</div>
+        <div class="legend-stn"><b>SMP</b> Santa Mooica</div>
+        <div class="legend-stn"><b>ATP</b> Asian Town</div>
+        <div class="legend-stn"><b>FTP</b> FLX Terminal</div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- MAP -->
+  <main class="map-area">
+    <div id="rail-diagram"></div>
+  </main>
+
 </div>
+
+<!-- TOOLTIP -->
+<div id="tooltip">
+  <div class="tt-num" id="tt-num"></div>
+  <div class="tt-coupled" id="tt-coupled" style="display:none"></div>
+  <div class="tt-row">Line <span id="tt-line"></span></div>
+  <div class="tt-row">Block <span id="tt-block"></span></div>
+  <div class="tt-row">Status <span id="tt-status"></span></div>
+</div>
+
+<div id="toast"></div>
 
 <script src="map.js"></script>
 </body>
