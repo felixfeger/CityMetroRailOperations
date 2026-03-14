@@ -32,35 +32,67 @@ AW015:{x:1750,y:220},
 
 SMP1:{x:1800,y:220},
 
-EW010:{x:1550,y:370},
-EW011:{x:1650,y:370},
-EW012:{x:1750,y:370},
-
-TCP1:{x:1800,y:370},
-
-EW007:{x:1200,y:370},
-EW008:{x:1300,y:370},
-EW009:{x:1400,y:370},
-
-DHP1:{x:1450,y:370},
-
 KN001:{x:150,y:120},
 KN002:{x:250,y:120},
 KN003:{x:350,y:120},
 
 ATP1:{x:400,y:120},
 
-FE001:{x:1150,y:370},
-FE002:{x:1200,y:420},
-FE003:{x:1250,y:450},
+EW010:{x:1550,y:330},
+EW011:{x:1650,y:330},
+EW012:{x:1750,y:330},
 
-FTP2:{x:1100,y:370}
+TCP1:{x:1800,y:330},
+
+EW007:{x:1200,y:330},
+EW008:{x:1300,y:330},
+EW009:{x:1400,y:330},
+
+DHP1:{x:1450,y:330},
+
+FE001:{x:1100,y:300},
+FE002:{x:1100,y:340},
+FE003:{x:1100,y:380},
+
+FTP2:{x:1100,y:420}
 
 };
 
 let trains={};
 
+function drawLines(){
+
+const map=document.getElementById("map");
+
+function line(x1,y1,x2){
+
+let l=document.createElement("div");
+
+l.className="line";
+
+l.style.left=x1+"px";
+l.style.top=(y1-3)+"px";
+l.style.width=(x2-x1)+"px";
+
+map.appendChild(l);
+
+}
+
+line(50,220,400);
+line(400,220,750);
+line(750,220,1100);
+line(1100,220,1450);
+line(1450,220,1800);
+
+line(1450,330,1800);
+line(1100,220,1100);
+line(50,120,400);
+
+}
+
 function drawBlocks(){
+
+const map=document.getElementById("map");
 
 for(let id in blocks){
 
@@ -72,7 +104,7 @@ dot.className="block";
 dot.style.left=b.x+"px";
 dot.style.top=b.y+"px";
 
-document.getElementById("map").appendChild(dot);
+map.appendChild(dot);
 
 let label=document.createElement("div");
 label.className="blockLabel";
@@ -82,7 +114,7 @@ label.innerText=id;
 label.style.left=(b.x-10)+"px";
 label.style.top=(b.y+12)+"px";
 
-document.getElementById("map").appendChild(label);
+map.appendChild(label);
 
 }
 
@@ -99,7 +131,8 @@ dot.className="train";
 dot.style.left=block.x+"px";
 dot.style.top=block.y+"px";
 
-dot.title="Train "+train.number+
+dot.title=
+"Train "+train.number+
 "\nModel "+train.model+
 "\nRoute "+train.route+
 "\nBlock "+train.location;
@@ -115,8 +148,6 @@ dot2.className="train";
 dot2.style.left=(block.x+14)+"px";
 dot2.style.top=(block.y)+"px";
 
-dot2.title="Connected Train "+train.connected;
-
 document.getElementById("map").appendChild(dot2);
 
 }
@@ -125,8 +156,11 @@ document.getElementById("map").appendChild(dot2);
 
 function refresh(){
 
-document.getElementById("map").innerHTML="";
+let map=document.getElementById("map");
 
+map.innerHTML="";
+
+drawLines();
 drawBlocks();
 
 for(let t in trains){
@@ -184,11 +218,17 @@ refresh();
 
 function searchTrain(){
 
-let num=document.getElementById("searchTrain").value;
+let num=document.getElementById("searchTrain").value.trim();
 
 let t=trains[num];
 
-if(!t) return;
+if(!t){
+
+alert("Train not found");
+
+return;
+
+}
 
 document.getElementById("trainNumber").value=t.number;
 document.getElementById("trainModel").value=t.model;
@@ -198,4 +238,23 @@ document.getElementById("trainConnected").value=t.connected;
 
 }
 
+function toggleTheme(){
+
+let body=document.body;
+
+if(body.classList.contains("dark")){
+
+body.classList.remove("dark");
+body.classList.add("light");
+
+}else{
+
+body.classList.remove("light");
+body.classList.add("dark");
+
+}
+
+}
+
+drawLines();
 drawBlocks();
