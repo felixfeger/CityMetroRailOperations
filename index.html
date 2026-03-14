@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title> City Metro Dispatch Map</title>
+<link rel="stylesheet" href="style.css">
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+
+<script src="firebase.js"></script>
+<script src="map.js"></script>
+</head>
+
+<body>
+
+<h1>City Metro Rail Dispatcher</h1>
+
+<div id="dispatcherPanel">
+
+Train Number
+<input id="trainNumber">
+
+Train Model
+<input id="trainModel">
+
+Route
+<input id="trainRoute">
+
+Location Block
+<input id="trainLocation">
+
+Connected Train
+<input id="trainConnected">
+
+<button onclick="addTrain()">Add Train</button>
+<button onclick="updateTrain()">Update Train</button>
+<button onclick="removeTrain()">Remove Train</button>
+
+<br><br>
+
+Search Train
+<input id="searchTrain">
+<button onclick="searchTrain()">Search</button>
+
+</div>
+
+<div id="map"></div>
+
+</body>
+</html>
