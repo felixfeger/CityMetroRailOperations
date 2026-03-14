@@ -4,66 +4,74 @@
 <head>
 
 <meta charset="UTF-8">
-<title>City Metro Dispatcher</title>
+<title>City Metro Rail Map</title>
 
 <link rel="stylesheet" href="style.css">
 
 </head>
 
-<body class="dark">
+<body>
 
-<h1>City Metro Rail Dispatcher</h1>
+<header>
 
-<button onclick="toggleTheme()">Toggle Light / Dark Mode</button>
+<h1>City Metro Train Map</h1>
+
+</header>
 
 <div id="controls">
 
-Train Number
+<h3>Train Controls</h3>
+
+<label>Train Number</label>
 <input id="trainNumber">
 
-Model
+<label>Model</label>
 <input id="trainModel">
 
-Route
+<label>Route</label>
 <input id="trainRoute">
 
-Block
+<label>Block</label>
 <input id="trainLocation">
 
-Connected Train
+<label>Connected Train</label>
 <input id="trainConnected">
 
-<button onclick="addTrain()">Add</button>
-<button onclick="updateTrain()">Update</button>
-<button onclick="removeTrain()">Remove</button>
+<div class="buttons">
 
-<br><br>
+<button onclick="addTrain()">Add Train</button>
+<button onclick="updateTrain()">Update Train</button>
+<button onclick="removeTrain()">Remove Train</button>
 
-Search Train
+</div>
+
+<hr>
+
+<label>Search Train</label>
 <input id="searchTrain">
+
 <button onclick="searchTrain()">Search</button>
 
 </div>
 
-<div id="container">
+<div id="layout">
 
 <div id="map"></div>
 
 <div id="key">
 
-<h3>Station Code Key</h3>
+<h3>Station Codes</h3>
 
-USP1 — Union Station Platform 1  
-USP3 — Union Station Platform 3  
-DLP2 — Downtown Lego City  
-EQP1 — Emergency HQ  
-AMP1 — Airport Metro Transit Center  
-DSP1 — Death Star City  
-SMP1 — Downtown Santa Mooica  
-DHP1 — Desktop Hills  
-TCP1 — Table Central  
-ATP1 — Asiantown  
-FTP2 — FLX Terminal  
+<p><b>USP1</b> — Union Station</p>
+<p><b>DLP2</b> — Downtown Lego City</p>
+<p><b>EQP1</b> — Emergency HQ</p>
+<p><b>AMP1</b> — Airport Metro Transit Center</p>
+<p><b>DSP1</b> — Death Star City</p>
+<p><b>SMP1</b> — Downtown Santa Mooica</p>
+<p><b>DHP1</b> — Desktop Hills</p>
+<p><b>TCP1</b> — Table Central</p>
+<p><b>ATP1</b> — Asiantown</p>
+<p><b>FTP2</b> — FLX Terminal</p>
 
 </div>
 
