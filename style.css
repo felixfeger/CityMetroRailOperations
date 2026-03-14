@@ -47,7 +47,7 @@ header {
 
 #map {
     position: relative;
-    width: 1920px;
+    width: 2200px; /* extended width for longer lines */
     height: 800px;
     background: white;
     border-radius: 10px;
@@ -92,13 +92,26 @@ header {
     height: 16px;
     background: red;
     border-radius: 50%;
+    cursor: pointer;
 }
 
 #key {
-    width: 220px;
+    width: 180px; /* smaller key */
     background: white;
     padding: 20px;
     border-radius: 10px;
     margin-top: 20px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* Hover info box */
+#infoBox {
+    position: absolute;
+    background: rgba(0,0,0,0.85);
+    color: white;
+    padding: 8px;
+    border-radius: 6px;
+    pointer-events: none;
+    font-size: 12px;
+    display: none;
 }
