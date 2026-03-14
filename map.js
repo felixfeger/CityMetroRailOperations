@@ -1,239 +1,284 @@
-// ---- Metro Map.js (Full Version) ----
+// ===== CONFIG =====
 
-// Worker URL for D1 API
-const WORKER_URL = "https://trains-api.felixfeger46.workers.dev"; // <-- replace with your Worker URL
+const API = "https://trains-api.felixfeger46.workers.dev";
 
-// Block coordinates (x horizontal, y vertical)
+let trains = {};
+
+// ===== BLOCK MAP =====
+
 const blocks = {
-    // A Line (Blue)
-    AW_USP1:{x:80,y:50}, AW001:{x:180,y:50}, AW002:{x:280,y:50}, AW003:{x:380,y:50},
-    AW_DLP2:{x:450,y:50}, AW004:{x:550,y:50}, AW005:{x:650,y:50}, AW006:{x:750,y:50},
-    AW_EQP1:{x:820,y:50}, AW007:{x:920,y:50}, AW008:{x:1020,y:50}, AW009:{x:1120,y:50},
-    AW_AMP1:{x:1180,y:50}, AW010:{x:1280,y:50}, AW011:{x:1380,y:50}, AW012:{x:1480,y:50},
-    AW_DSP1:{x:1550,y:50}, AW013:{x:1650,y:50}, AW014:{x:1750,y:50}, AW015:{x:1850,y:50},
-    AW_SMP1:{x:1920,y:50},
 
-    // E Line (Gold)
-    EW_USP2:{x:80,y:150}, EW001:{x:180,y:150}, EW002:{x:280,y:150}, EW003:{x:380,y:150},
-    EW_DLP2:{x:450,y:150}, EW004:{x:550,y:150}, EW005:{x:650,y:150}, EW006:{x:750,y:150},
-    EW_EQP1:{x:820,y:150}, EW007:{x:920,y:150}, EW008:{x:1020,y:150}, EW009:{x:1120,y:150},
-    EW_AMP1:{x:1180,y:150}, EW010:{x:1280,y:150}, EW011:{x:1380,y:150}, EW012:{x:1480,y:150},
-    EW_DHP1:{x:1550,y:150}, EW013:{x:1650,y:150}, EW014:{x:1750,y:150}, EW015:{x:1850,y:150},
-    EW_TCP1:{x:1920,y:150},
+AW_USP1:{x:80,y:60},
+AW001:{x:180,y:60},
+AW002:{x:280,y:60},
+AW003:{x:380,y:60},
+AW_DLP2:{x:480,y:60},
+AW004:{x:580,y:60},
+AW005:{x:680,y:60},
+AW006:{x:780,y:60},
+AW_EQP1:{x:880,y:60},
+AW007:{x:980,y:60},
+AW008:{x:1080,y:60},
+AW009:{x:1180,y:60},
+AW_AMP1:{x:1280,y:60},
+AW010:{x:1380,y:60},
+AW011:{x:1480,y:60},
+AW012:{x:1580,y:60},
+AW_DSP1:{x:1680,y:60},
+AW013:{x:1780,y:60},
+AW014:{x:1880,y:60},
+AW015:{x:1980,y:60},
+AW_SMP1:{x:2080,y:60},
 
-    // F Line (Orange)
-    FW_AMP1:{x:1180,y:250}, FW001:{x:1280,y:250}, FW002:{x:1380,y:250}, FW003:{x:1480,y:250},
-    FW_FTP2:{x:1580,y:250},
+EW_USP2:{x:80,y:180},
+EW001:{x:180,y:180},
+EW002:{x:280,y:180},
+EW003:{x:380,y:180},
+EW_DLP2:{x:480,y:180},
+EW004:{x:580,y:180},
+EW005:{x:680,y:180},
+EW006:{x:780,y:180},
+EW_EQP1:{x:880,y:180},
+EW007:{x:980,y:180},
+EW008:{x:1080,y:180},
+EW009:{x:1180,y:180},
+EW_AMP1:{x:1280,y:180},
+EW010:{x:1380,y:180},
+EW011:{x:1480,y:180},
+EW012:{x:1580,y:180},
+EW_DHP1:{x:1680,y:180},
+EW013:{x:1780,y:180},
+EW014:{x:1880,y:180},
+EW015:{x:1980,y:180},
+EW_TCP1:{x:2080,y:180},
 
-    // K Line (Pink/Magenta)
-    KW_USP3:{x:80,y:350}, KW001:{x:180,y:350}, KW002:{x:280,y:350}, KW003:{x:380,y:350},
-    KW_ATP1:{x:450,y:350}
+FW_AMP1:{x:1280,y:300},
+FW001:{x:1380,y:300},
+FW002:{x:1480,y:300},
+FW003:{x:1580,y:300},
+FW_FTP2:{x:1680,y:300},
+
+KW_USP3:{x:80,y:420},
+KW001:{x:180,y:420},
+KW002:{x:280,y:420},
+KW003:{x:380,y:420},
+KW_ATP1:{x:480,y:420}
+
 };
 
-let trains = {}; // trains loaded from D1
+// ===== DRAW BASE MAP =====
 
-const lineColors = {
-    A: "#1e3a8a",
-    E: "#d4af37",
-    F: "#c2410c",
-    K: "#ff00ff"
-};
-
-// ---- DRAW FUNCTIONS ----
 function drawLines(){
-    const map = document.getElementById("map");
 
-    const lineSets = [
-        {blocks:Object.keys(blocks).filter(k=>k.startsWith("AW_")), color:lineColors.A},
-        {blocks:Object.keys(blocks).filter(k=>k.startsWith("EW_")), color:lineColors.E},
-        {blocks:Object.keys(blocks).filter(k=>k.startsWith("FW_")), color:lineColors.F},
-        {blocks:Object.keys(blocks).filter(k=>k.startsWith("KW_")), color:lineColors.K}
-    ];
+const map=document.getElementById("map");
 
-    lineSets.forEach(set=>{
-        for(let i=0;i<set.blocks.length-1;i++){
-            const b1=blocks[set.blocks[i]];
-            const b2=blocks[set.blocks[i+1]];
+const lines=[
+["AW","#1e3a8a"],
+["EW","#d4af37"],
+["FW","#c2410c"],
+["KW","#ff00ff"]
+];
 
-            let l=document.createElement("div");
-            l.className="line";
-            l.style.left=b1.x+"px";
-            l.style.top=(b1.y+4)+"px";
-            l.style.width=(b2.x-b1.x)+"px";
-            l.style.background=set.color;
-            map.appendChild(l);
-        }
-    });
+lines.forEach(line=>{
+
+const ids=Object.keys(blocks).filter(b=>b.startsWith(line[0]));
+
+for(let i=0;i<ids.length-1;i++){
+
+const a=blocks[ids[i]];
+const b=blocks[ids[i+1]];
+
+let el=document.createElement("div");
+el.className="line";
+el.style.left=a.x+"px";
+el.style.top=(a.y+4)+"px";
+el.style.width=(b.x-a.x)+"px";
+el.style.background=line[1];
+
+map.appendChild(el);
+
+}
+
+});
+
 }
 
 function drawBlocks(){
-    const map=document.getElementById("map");
-    for(let id in blocks){
-        let b=blocks[id];
 
-        let dot=document.createElement("div");
-        dot.className="block";
-        dot.style.left=b.x+"px";
-        dot.style.top=b.y+"px";
-        map.appendChild(dot);
+const map=document.getElementById("map");
 
-        let label=document.createElement("div");
-        label.className="blockLabel";
-        label.innerText=id;
-        label.style.left=(b.x-10)+"px";
-        label.style.top=(b.y+14)+"px";
-        map.appendChild(label);
-    }
+for(const id in blocks){
+
+let b=blocks[id];
+
+let dot=document.createElement("div");
+dot.className="block";
+dot.style.left=b.x+"px";
+dot.style.top=b.y+"px";
+
+map.appendChild(dot);
+
 }
+
+}
+
+// ===== STATIONS =====
 
 function drawStations(){
-    const map=document.getElementById("map");
-    const stations={
-        USP1:{x:60,y:50,name:"Union Station P1"},
-        USP3:{x:60,y:350,name:"Union Station P3"},
-        DLP2:{x:430,y:50,name:"Downtown Lego City"},
-        EQP1:{x:820,y:50,name:"Emergency HQ"},
-        AMP1:{x:1180,y:50,name:"Airport Metro Transit Center"},
-        DSP1:{x:1550,y:50,name:"Death Star City"},
-        SMP1:{x:1920,y:50,name:"Downtown Santa Mooica"},
-        DHP1:{x:1550,y:150,name:"Desktop Hills"},
-        TCP1:{x:1920,y:150,name:"Table Central"},
-        ATP1:{x:450,y:350,name:"Asiantown"},
-        FTP2:{x:1580,y:250,name:"FLX Terminal"}
-    };
 
-    for(let id in stations){
-        let s=stations[id];
-        let div=document.createElement("div");
-        div.className="station";
-        div.innerText=s.name;
-        div.style.left=s.x+"px";
-        div.style.top=(s.y - 20)+"px"; // above line
-        map.appendChild(div);
-    }
+const stations={
+USP1:{x:60,y:60,name:"Union Station"},
+DLP2:{x:460,y:60,name:"Downtown Lego City"},
+EQP1:{x:860,y:60,name:"Emergency HQ"},
+AMP1:{x:1260,y:60,name:"Airport Metro"},
+DSP1:{x:1660,y:60,name:"Death Star"},
+SMP1:{x:2060,y:60,name:"Santa Mooica"},
+ATP1:{x:460,y:420,name:"Asiantown"},
+FTP2:{x:1660,y:300,name:"FLX Terminal"}
+};
+
+const map=document.getElementById("map");
+
+for(const id in stations){
+
+let s=stations[id];
+
+let el=document.createElement("div");
+el.className="station";
+
+el.innerText=s.name;
+
+el.style.left=s.x+"px";
+el.style.top=(s.y-25)+"px";
+
+map.appendChild(el);
+
 }
 
-// ---- DRAW TRAINS ----
+}
+
+// ===== TRAINS =====
+
 function drawTrain(train){
-    let block=blocks[train.location];
-    if(!block) return;
 
-    let dot=document.createElement("div");
-    dot.className="train";
-    dot.style.left=block.x+"px";
-    dot.style.top=block.y+"px";
-    dot.dataset.train=JSON.stringify(train);
+const block=blocks[train.location];
+if(!block)return;
 
-    dot.addEventListener("mouseenter", e=>{
-        showInfo(train, e.pageX, e.pageY);
-    });
-    dot.addEventListener("mouseleave", hideInfo);
+let dot=document.createElement("div");
+dot.className="train";
 
-    document.getElementById("map").appendChild(dot);
+dot.style.left=block.x+"px";
+dot.style.top=block.y+"px";
 
-    if(train.connected){
-        let dot2=document.createElement("div");
-        dot2.className="train";
-        dot2.style.left=(block.x+18)+"px";
-        dot2.style.top=block.y+"px";
-        dot2.dataset.train=JSON.stringify(train);
-        dot2.addEventListener("mouseenter", e=>showInfo(train,e.pageX,e.pageY));
-        dot2.addEventListener("mouseleave", hideInfo);
-        document.getElementById("map").appendChild(dot2);
-    }
+dot.addEventListener("mouseenter",e=>showInfo(train,e.pageX,e.pageY));
+dot.addEventListener("mouseleave",hideInfo);
+
+document.getElementById("map").appendChild(dot);
+
 }
 
-function showInfo(train, x, y){
-    let box=document.getElementById("infoBox");
-    if(!box){
-        box=document.createElement("div");
-        box.id="infoBox";
-        document.body.appendChild(box);
-    }
-    box.innerHTML=`Train: ${train.number}<br>Route: ${train.route}<br>Block: ${train.location}`;
-    box.style.left=x+"px";
-    box.style.top=y+"px";
-    box.style.display="block";
+function showInfo(train,x,y){
+
+let box=document.getElementById("infoBox");
+
+if(!box){
+
+box=document.createElement("div");
+box.id="infoBox";
+document.body.appendChild(box);
+
+}
+
+box.innerHTML=
+`Train ${train.number}<br>
+Route ${train.route}<br>
+Block ${train.location}`;
+
+box.style.left=x+"px";
+box.style.top=y+"px";
+box.style.display="block";
+
 }
 
 function hideInfo(){
-    const box=document.getElementById("infoBox");
-    if(box) box.style.display="none";
+
+let box=document.getElementById("infoBox");
+if(box) box.style.display="none";
+
 }
+
+// ===== REFRESH =====
 
 function refresh(){
-    const map=document.getElementById("map");
-    map.innerHTML="";
-    drawLines();
-    drawBlocks();
-    drawStations();
-    for(let t in trains) drawTrain(trains[t]);
+
+const map=document.getElementById("map");
+map.innerHTML="";
+
+drawLines();
+drawBlocks();
+drawStations();
+
+Object.values(trains).forEach(drawTrain);
+
 }
 
-// ---- DATABASE FUNCTIONS ----
-async function loadTrainsFromDB(){
-    const res = await fetch(`${WORKER_URL}/trains`);
-    const data = await res.json();
-    trains={};
-    data.forEach(t=>trains[t.number]=t);
-    refresh();
+// ===== DATABASE =====
+
+async function loadTrains(){
+
+try{
+
+const res=await fetch(API+"/trains");
+
+const data=await res.json();
+
+trains={};
+
+data.forEach(t=>trains[t.number]=t);
+
+}catch(e){
+
+console.log("API unavailable, map still loads");
+
+}
+
+refresh();
+
 }
 
 async function addTrain(){
-    let number=document.getElementById("trainNumber").value.trim();
-    if(!number) return;
 
-    let train={
-        number:number,
-        route:document.getElementById("trainRoute").value,
-        location:document.getElementById("trainLocation").value,
-        connected:document.getElementById("trainConnected").value
-    };
+const train={
+number:trainNumber.value,
+route:trainRoute.value,
+location:trainLocation.value,
+connected:trainConnected.value
+};
 
-    trains[number]=train;
-    refresh();
+trains[train.number]=train;
 
-    await fetch(`${WORKER_URL}/trains`,{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify(train)
-    });
-}
+refresh();
 
-async function updateTrain(){
-    let number=document.getElementById("trainNumber").value.trim();
-    if(!trains[number]) return;
+fetch(API+"/trains",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(train)
+});
 
-    trains[number].route=document.getElementById("trainRoute").value;
-    trains[number].location=document.getElementById("trainLocation").value;
-    trains[number].connected=document.getElementById("trainConnected").value;
-    refresh();
-
-    await fetch(`${WORKER_URL}/trains`,{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify(trains[number])
-    });
 }
 
 async function removeTrain(){
-    let number=document.getElementById("trainNumber").value.trim();
-    delete trains[number];
-    refresh();
 
-    await fetch(`${WORKER_URL}/trains/${number}`,{method:"DELETE"});
+const num=trainNumber.value;
+
+delete trains[num];
+
+refresh();
+
+fetch(API+"/trains/"+num,{method:"DELETE"});
+
 }
 
-function searchTrain(){
-    let num=document.getElementById("searchTrain").value.trim();
-    let t=trains[num];
-    if(!t){ alert("Train not found"); return; }
+// ===== INIT =====
 
-    document.getElementById("trainNumber").value=t.number;
-    document.getElementById("trainRoute").value=t.route;
-    document.getElementById("trainLocation").value=t.location;
-    document.getElementById("trainConnected").value=t.connected;
-}
-
-// ---- INIT ----
-loadTrainsFromDB();
+loadTrains();
