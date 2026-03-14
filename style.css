@@ -1,134 +1,104 @@
-body{
-
-font-family: Helvetica, Arial, sans-serif;
-background:#f5f7fb;
-margin:0;
-color:#222;
-
+body {
+    font-family: Helvetica, Arial, sans-serif;
+    background: #f5f7fb;
+    margin: 0;
+    color: #222;
 }
 
-header{
-
-background:white;
-padding:20px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
-
+header {
+    background: white;
+    padding: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    text-align: center;
 }
 
-h1{
-
-margin:0;
-
+#controls {
+    background: white;
+    margin: 20px;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    width: 900px;
 }
 
-#controls{
-
-background:white;
-margin:20px;
-padding:20px;
-border-radius:10px;
-box-shadow:0 4px 10px rgba(0,0,0,0.08);
-width:900px;
-
+#controls input {
+    margin: 5px;
+    padding: 6px;
 }
 
-#controls input{
-
-margin:5px;
-padding:6px;
+.buttons button {
+    margin: 5px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
 }
 
-.buttons button{
-
-margin:5px;
-padding:8px 12px;
-border:none;
-border-radius:6px;
-background:#2563eb;
-color:white;
-cursor:pointer;
-
+.buttons button:hover {
+    background: #1e4fd1;
 }
 
-.buttons button:hover{
-
-background:#1e4fd1;
-
+#layout {
+    display: flex;
+    justify-content: center;
 }
 
-#layout{
-
-display:flex;
-justify-content:center;
-
+#map {
+    position: relative;
+    width: 1900px;
+    height: 800px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+    margin: 20px;
 }
 
-#map{
-
-position:relative;
-width:1900px;
-height:450px;
-background:white;
-border-radius:10px;
-box-shadow:0 6px 14px rgba(0,0,0,0.08);
-margin:20px;
-
+.station {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: #111;
+    color: white;
+    padding: 4px;
+    border-radius: 50%;
+    font-size: 12px;
+    text-align: center;
 }
 
-.station{
-
-position:absolute;
-background:#111;
-color:white;
-padding:6px 10px;
-border-radius:6px;
-font-size:12px;
-
+.block {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #555;
+    border-radius: 50%;
 }
 
-.block{
-
-position:absolute;
-width:12px;
-height:12px;
-background:#555;
-border-radius:50%;
-
+.blockLabel {
+    position: absolute;
+    font-size: 10px;
+    color: #333;
 }
 
-.blockLabel{
-
-position:absolute;
-font-size:10px;
-color:#333;
-
+.line {
+    position: absolute;
+    height: 4px;
 }
 
-.line{
-
-position:absolute;
-height:4px;
-background:#444;
-
+.train {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: red;
+    border-radius: 50%;
 }
 
-.train{
-
-position:absolute;
-width:16px;
-height:16px;
-background:red;
-border-radius:50%;
-
-}
-
-#key{
-
-width:220px;
-background:white;
-padding:20px;
-border-radius:10px;
-margin-top:20px;
-box-shadow:0 4px 10px rgba(0,0,0,0.08);
-
+#key {
+    width: 220px;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
 }
