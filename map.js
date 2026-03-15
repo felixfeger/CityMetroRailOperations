@@ -858,36 +858,55 @@ async function addTrain() {
   if (!location) return showToast('Select a block or station', 'error');
   if (trains[number]) return showToast(`Train #${number} already exists`, 'error');
 
+  // ── Coupled creation (A line optional couple field) ──
   if (coupleWith && route === 'A') {
-    if (trains[coupleWith])   return showToast(`Train #${coupleWith} already exists`, 'error');
+    if (coupleWith === number)    return showToast('Train numbers must be different', 'error');
+    if (trains[coupleWith])       return showToast(`Train #${coupleWith} already exists — remove it first`, 'error');
 
-    // Create both trains linked to each other in one step
-    const trainA = { number,     route, location, connected, coupled_with: coupleWith };
-    const trainB = { number: coupleWith, route, location, connected, coupled_with: number };
+    try {
+      const trainA = { number,              route, location, connected, coupled_with: coupleWith };
+      const trainB = { number: coupleWith,  route, location, connected, coupled_with: number };
 
-    await persistSave(trainA);
-    await persistSave(trainB);
+      // Write both to local state first so renderTrains sees them immediately
+      trains[trainA.number] = trainA;
+      trains[trainB.number] = trainB;
+      lsSaveAll();
 
-    renderTrains();
+      // Then persist both to API
+      await persistSave(trainA);
+      await persistSave(trainB);
 
-    document.getElementById('inp-num').value    = '';
-    document.getElementById('inp-couple').value = '';
-    document.getElementById('inp-block').innerHTML = '<option value="">— Select Line First —</option>';
-    document.getElementById('inp-line').value   = '';
-    document.getElementById('couple-section').classList.remove('visible');
+      renderTrains();
 
-    return showToast(`Coupled set #${number}+#${coupleWith} added ✓`, 'success');
+      document.getElementById('inp-num').value    = '';
+      document.getElementById('inp-couple').value = '';
+      document.getElementById('inp-line').value   = '';
+      document.getElementById('inp-block').innerHTML = '<option value="">— Select Line First —</option>';
+      document.getElementById('couple-section').classList.remove('visible');
+
+      return showToast(`Coupled set #${number} + #${coupleWith} added ✓`, 'success');
+    } catch (e) {
+      console.error('Failed to create coupled set:', e);
+      return showToast('Error creating coupled set — check console', 'error');
+    }
   }
 
-  // Single train
-  const train = { number, route, location, connected, coupled_with: null };
-  await persistSave(train);
-  renderTrains();
+  // ── Single train ──
+  try {
+    const train = { number, route, location, connected, coupled_with: null };
+    trains[number] = train;
+    lsSaveAll();
+    await persistSave(train);
+    renderTrains();
 
-  document.getElementById('inp-num').value = '';
-  document.getElementById('inp-block').innerHTML = '<option value="">— Select Line First —</option>';
+    document.getElementById('inp-num').value = '';
+    document.getElementById('inp-block').innerHTML = '<option value="">— Select Line First —</option>';
 
-  showToast(`Train #${number} added ✓`, 'success');
+    showToast(`Train #${number} added ✓`, 'success');
+  } catch (e) {
+    console.error('Failed to add train:', e);
+    showToast('Error adding train — check console', 'error');
+  }
 }
 
 async function removeTrain(number) {
