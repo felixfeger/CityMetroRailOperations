@@ -25,7 +25,7 @@ const NETWORK = {
     name: 'A Line',
     colorHex: '#2563eb',
     doubleTrack: true,
-    route: 'Union Station  ←→  Santa Mooica',
+    route: 'Santa Mooica (West)  ←→  Union Station (East)',
     couplingLine: true,   // A line supports coupled sets
     nodes: [
       { t:'stn', name:'Union Station',
@@ -59,7 +59,7 @@ const NETWORK = {
     name: 'E Line',
     colorHex: '#b45309',
     doubleTrack: true,
-    route: 'Union Station  ←→  Table Central  (via Emergency HQ)',
+    route: 'Table Central (West)  ←→  Union Station (East)  (via Emergency HQ)',
     nodes: [
       // Union → DLC: physically shared track with A (use A-prefix per convention)
       { t:'stn', name:'Union Station',
@@ -221,14 +221,14 @@ function buildLineRow(lineKey, line) {
   if (line.doubleTrack) {
     // Names row
     card.appendChild(buildNamesRow(line));
-    // WB
+    // WB — toward Santa Mooica / Table Central (West terminus)
     const wbWrap = buildTrackWithDir(line, 'wb', '← WB');
     card.appendChild(wbWrap);
     // small gap
     const gap = document.createElement('div');
     gap.className = 'track-gap';
     card.appendChild(gap);
-    // EB
+    // EB — toward Union Station (East terminus)
     const ebWrap = buildTrackWithDir(line, 'eb', 'EB →');
     card.appendChild(ebWrap);
   } else {
