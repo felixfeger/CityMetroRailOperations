@@ -847,10 +847,10 @@ async function loadTrains() {
    TRAIN OPERATIONS
    ══════════════════════════════════════════════════════════ */
 async function addTrain() {
-  const number    = document.getElementById('inp-num').value.trim();
-  const route     = document.getElementById('inp-line').value;
-  const location  = document.getElementById('inp-block').value;
-  const connected = parseInt(document.getElementById('inp-connected').value);
+  const number     = document.getElementById('inp-num').value.trim();
+  const route      = document.getElementById('inp-line').value;
+  const location   = document.getElementById('inp-block').value;
+  const connected  = parseInt(document.getElementById('inp-connected').value);
   const coupleWith = document.getElementById('inp-couple').value.trim();
 
   if (!number)   return showToast('Enter a train number', 'error');
@@ -858,27 +858,36 @@ async function addTrain() {
   if (!location) return showToast('Select a block or station', 'error');
   if (trains[number]) return showToast(`Train #${number} already exists`, 'error');
 
-  const train = { number, route, location, connected, coupled_with: coupleWith || null };
+  if (coupleWith && route === 'A') {
+    if (trains[coupleWith])   return showToast(`Train #${coupleWith} already exists`, 'error');
 
-  if (coupleWith) {
-    if (!trains[coupleWith]) return showToast(`Train #${coupleWith} not found — add it first`, 'error');
-    train.coupled_with = coupleWith;
-    trains[coupleWith].coupled_with = number;
-    await persistSave(trains[coupleWith]);
+    // Create both trains linked to each other in one step
+    const trainA = { number,     route, location, connected, coupled_with: coupleWith };
+    const trainB = { number: coupleWith, route, location, connected, coupled_with: number };
+
+    await persistSave(trainA);
+    await persistSave(trainB);
+
+    renderTrains();
+
+    document.getElementById('inp-num').value    = '';
+    document.getElementById('inp-couple').value = '';
+    document.getElementById('inp-block').innerHTML = '<option value="">— Select Line First —</option>';
+    document.getElementById('inp-line').value   = '';
+    document.getElementById('couple-section').classList.remove('visible');
+
+    return showToast(`Coupled set #${number}+#${coupleWith} added ✓`, 'success');
   }
 
+  // Single train
+  const train = { number, route, location, connected, coupled_with: null };
   await persistSave(train);
   renderTrains();
 
-  // Reset form
   document.getElementById('inp-num').value = '';
-  document.getElementById('inp-couple').value = '';
   document.getElementById('inp-block').innerHTML = '<option value="">— Select Line First —</option>';
 
-  showToast(
-    `Train #${number} added${coupleWith ? ` (coupled with #${coupleWith})` : ''} ✓`,
-    'success'
-  );
+  showToast(`Train #${number} added ✓`, 'success');
 }
 
 async function removeTrain(number) {
