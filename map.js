@@ -25,7 +25,7 @@ const NETWORK = {
     name: 'A Line',
     colorHex: '#2563eb',
     doubleTrack: true,
-    route: 'Santa Mooica (West)  ←→  Union Station (East)',
+    route: 'Union Station (East)  ←→  Santa Mooica (West)',
     couplingLine: true,   // A line supports coupled sets
     nodes: [
       { t:'stn', name:'Union Station',
@@ -59,7 +59,7 @@ const NETWORK = {
     name: 'E Line',
     colorHex: '#b45309',
     doubleTrack: true,
-    route: 'Table Central (West)  ←→  Union Station (East)  (via Emergency HQ)',
+    route: 'Union Station (East)  ←→  Table Central (West)  (via Emergency HQ)',
     nodes: [
       // Union → DLC: physically shared track with A (use A-prefix per convention)
       { t:'stn', name:'Union Station',
