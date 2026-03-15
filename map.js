@@ -221,16 +221,16 @@ function buildLineRow(lineKey, line) {
   if (line.doubleTrack) {
     // Names row
     card.appendChild(buildNamesRow(line));
-    // WB — toward Santa Mooica / Table Central (West terminus)
-    const wbWrap = buildTrackWithDir(line, 'wb', '← WB');
-    card.appendChild(wbWrap);
+    // EB on top — trains heading left (←) toward Union Station (East)
+    const ebWrap = buildTrackWithDir(line, 'eb', '← EB');
+    card.appendChild(ebWrap);
     // small gap
     const gap = document.createElement('div');
     gap.className = 'track-gap';
     card.appendChild(gap);
-    // EB — toward Union Station (East terminus)
-    const ebWrap = buildTrackWithDir(line, 'eb', 'EB →');
-    card.appendChild(ebWrap);
+    // WB on bottom — trains heading right (→) toward Santa Mooica / Table Central (West)
+    const wbWrap = buildTrackWithDir(line, 'wb', 'WB →');
+    card.appendChild(wbWrap);
   } else {
     card.appendChild(buildSingleNamesRow(line));
     card.appendChild(buildSingleTrackWithDir(line));
