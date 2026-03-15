@@ -13,7 +13,7 @@
   ],
   "d1_databases": [
     {
-      "binding": "TRAIN_DB",
+      "binding": "DB",
       "database_name": "metro_dispatch",
       "database_id": "90188824-12b6-4210-a701-95bca416520f"
     }
