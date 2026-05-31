@@ -996,6 +996,52 @@ document.getElementById('btn-couple').addEventListener('click', () => {
   document.getElementById('inp-cpl-b').value = '';
 });
 
+/* ── Move Train ── */
+// When move-train number field changes, populate the location dropdown
+document.getElementById('inp-move-num').addEventListener('input', function () {
+  const number = this.value.trim();
+  const locSel = document.getElementById('inp-move-loc');
+  locSel.innerHTML = '<option value="">— Select New Location —</option>';
+
+  const train = trains[number];
+  if (!train) return;
+
+  const opts = getLocationsForLine(train.route);
+  for (const opt of opts) {
+    const o = document.createElement('option');
+    o.value = opt.id;
+    o.textContent = opt.label;
+    if (opt.id === train.location) o.selected = true;
+    locSel.appendChild(o);
+  }
+});
+
+document.getElementById('btn-move').addEventListener('click', async () => {
+  const number  = document.getElementById('inp-move-num').value.trim();
+  const newLoc  = document.getElementById('inp-move-loc').value;
+
+  if (!number)  return showToast('Enter a train number', 'error');
+  if (!newLoc)  return showToast('Select a new location', 'error');
+
+  const train = trains[number];
+  if (!train) return showToast(`Train #${number} not found`, 'error');
+  if (train.location === newLoc) return showToast(`Train #${number} is already at ${newLoc}`, 'info');
+
+  const oldLoc = train.location;
+  train.location = newLoc;
+
+  // If coupled, move partner to same location
+  if (train.coupled_with && trains[train.coupled_with]) {
+    trains[train.coupled_with].location = newLoc;
+    await persistSave(trains[train.coupled_with]);
+  }
+
+  await persistSave(train);
+  renderTrains();
+
+  showToast(`Train #${number} moved to ${newLoc}`, 'success');
+});
+
 document.getElementById('search-box').addEventListener('input', function () {
   applySearch(this.value);
 });
@@ -1009,3 +1055,171 @@ document.getElementById('search-clear').addEventListener('click', () => {
    ══════════════════════════════════════════════════════════ */
 renderDiagram();
 loadTrains();
+
+/* ══════════════════════════════════════════════════════════
+   CLOSURES
+   ══════════════════════════════════════════════════════════ */
+let closures  = [];   // { station_id, station_name, reason, lines[] }
+let turnbacks = [];   // { station_id, station_name, line, direction, reason }
+
+/* -- API -- */
+async function loadClosures() {
+  try {
+    const res = await fetch(`${API_BASE}/closures`);
+    if (!res.ok) throw new Error();
+    closures = await res.json();
+  } catch { closures = []; }
+  renderClosureList();
+  applyClosureOverlays();
+  updateBanner();
+}
+
+async function loadTurnbacks() {
+  try {
+    const res = await fetch(`${API_BASE}/turnbacks`);
+    if (!res.ok) throw new Error();
+    turnbacks = await res.json();
+  } catch { turnbacks = []; }
+  renderTurnbackList();
+  updateBanner();
+}
+
+async function addClosure() {
+  const val    = document.getElementById('inp-closure-station').value;
+  const reason = document.getElementById('inp-closure-reason').value.trim() || 'Maintenance';
+  if (!val) return showToast('Select a station', 'error');
+  const [station_id, station_name] = val.split('|');
+
+  try {
+    const res = await fetch(`${API_BASE}/closures`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ station_id, station_name, reason, lines: [] }),
+    });
+    if (!res.ok) throw new Error();
+    showToast(`${station_name} closed`, 'success');
+  } catch { showToast('Failed to set closure', 'error'); }
+
+  document.getElementById('inp-closure-station').value = '';
+  document.getElementById('inp-closure-reason').value  = '';
+  await loadClosures();
+}
+
+async function removeClosure(station_id) {
+  try {
+    await fetch(`${API_BASE}/closures/${encodeURIComponent(station_id)}`, { method: 'DELETE' });
+    showToast('Closure removed', 'success');
+  } catch { showToast('Failed to remove closure', 'error'); }
+  await loadClosures();
+}
+
+async function addTurnback() {
+  const val    = document.getElementById('inp-tb-station').value;
+  const line   = document.getElementById('inp-tb-line').value;
+  const dir    = document.getElementById('inp-tb-dir').value;
+  const reason = document.getElementById('inp-tb-reason').value.trim() || 'Service adjustment';
+  if (!val)  return showToast('Select a station', 'error');
+  if (!line) return showToast('Select a line', 'error');
+  const [station_id, station_name] = val.split('|');
+
+  try {
+    const res = await fetch(`${API_BASE}/turnbacks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ station_id, station_name, line, direction: dir, reason }),
+    });
+    if (!res.ok) throw new Error();
+    showToast(`Turnback set at ${station_name} (${line} Line)`, 'success');
+  } catch { showToast('Failed to set turnback', 'error'); }
+
+  document.getElementById('inp-tb-station').value = '';
+  document.getElementById('inp-tb-line').value    = '';
+  document.getElementById('inp-tb-reason').value  = '';
+  await loadTurnbacks();
+}
+
+async function removeTurnback(station_id, line) {
+  try {
+    await fetch(`${API_BASE}/turnbacks/${encodeURIComponent(station_id)}/${encodeURIComponent(line)}`, { method: 'DELETE' });
+    showToast('Turnback removed', 'success');
+  } catch { showToast('Failed to remove turnback', 'error'); }
+  await loadTurnbacks();
+}
+
+/* -- Render sidebar lists -- */
+function renderClosureList() {
+  const el = document.getElementById('closure-list');
+  if (!closures.length) { el.innerHTML = '<div class="empty-state">No closures</div>'; return; }
+  el.innerHTML = closures.map(c => `
+    <div class="event-item closure">
+      <div class="event-info">
+        <div class="event-name">🚫 ${c.station_name}</div>
+        <div class="event-detail">${c.reason}</div>
+      </div>
+      <button class="event-remove" onclick="removeClosure('${c.station_id}')" title="Remove closure">✕</button>
+    </div>`).join('');
+}
+
+function renderTurnbackList() {
+  const el = document.getElementById('turnback-list');
+  if (!turnbacks.length) { el.innerHTML = '<div class="empty-state">No turnbacks</div>'; return; }
+  el.innerHTML = turnbacks.map(t => `
+    <div class="event-item turnback">
+      <div class="event-info">
+        <div class="event-name">↩ ${t.station_name} — ${t.line} Line</div>
+        <div class="event-detail">${t.direction === 'both' ? 'Both directions' : t.direction + 'bound'} · ${t.reason}</div>
+      </div>
+      <button class="event-remove" onclick="removeTurnback('${t.station_id}','${t.line}')" title="Remove turnback">✕</button>
+    </div>`).join('');
+}
+
+/* -- Apply red overlay on closed station cells in diagram -- */
+function applyClosureOverlays() {
+  // Clear old overlays
+  document.querySelectorAll('.closed-overlay').forEach(e => e.remove());
+  document.querySelectorAll('.stn-cell[data-closed]').forEach(e => e.removeAttribute('data-closed'));
+
+  for (const c of closures) {
+    // Find all station cells whose id starts with the station code
+    document.querySelectorAll('.stn-cell[data-id]').forEach(el => {
+      if (el.dataset.id.includes(c.station_id)) {
+        el.setAttribute('data-closed', '1');
+        el.style.position = 'relative';
+        const overlay = document.createElement('div');
+        overlay.className = 'closed-overlay';
+        overlay.innerHTML = `<span class="closed-label">Closed</span>`;
+        el.appendChild(overlay);
+      }
+    });
+  }
+}
+
+/* -- Banner across top of dispatch -- */
+function updateBanner() {
+  const banner = document.getElementById('alert-banner');
+  const text   = document.getElementById('banner-text');
+  const items  = [];
+
+  for (const c of closures) {
+    items.push(`<span class="banner-item">🚫 ${c.station_name}: ${c.reason}</span>`);
+  }
+  for (const t of turnbacks) {
+    const dir = t.direction === 'both' ? '' : ` (${t.direction}B)`;
+    items.push(`<span class="banner-item">↩ ${t.line} Line turns back at ${t.station_name}${dir}</span>`);
+  }
+
+  if (items.length) {
+    text.innerHTML = items.join(' ');
+    banner.classList.add('has-alerts');
+  } else {
+    banner.classList.remove('has-alerts');
+  }
+}
+
+/* -- Wire buttons -- */
+document.getElementById('btn-close-station').addEventListener('click', addClosure);
+document.getElementById('btn-turnback').addEventListener('click', addTurnback);
+
+/* -- Load on start -- */
+loadClosures();
+loadTurnbacks();
