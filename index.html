@@ -241,6 +241,63 @@
     .map-area::-webkit-scrollbar { height:6px; width:6px; }
     .map-area::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
 
+    /* Line rows */
+    #rail-diagram { min-width:1100px; }
+    .line-row { margin-bottom:40px; }
+    .line-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+    .lh-pip { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .lh-name { font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; }
+    .lh-route { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); margin-left:4px; }
+    .lh-badge { margin-left:auto; background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:2px 8px; font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); }
+
+    /* Track section card */
+    .track-section { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px 16px; box-shadow:var(--shadow); }
+
+    /* Names row */
+    .names-with-dir { display:flex; align-items:flex-end; margin-bottom:4px; }
+    .names-spacer { width:44px; flex-shrink:0; }
+    .names-row { flex:1; display:flex; align-items:flex-end; }
+    .name-stn-slot { width:80px; flex-shrink:0; font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--text2); text-align:center; padding-bottom:4px; line-height:1.2; }
+    .name-blk-slot { flex:1; position:relative; text-align:center; padding-bottom:4px; }
+    .blk-zone-note { font-family:'DM Mono',monospace; font-size:8px; color:var(--muted2); letter-spacing:.03em; text-transform:uppercase; white-space:nowrap; }
+    .bidir-label { color:var(--muted2); }
+
+    /* Track row */
+    .track-with-dir { display:flex; align-items:center; gap:0; margin-bottom:4px; }
+    .track-with-dir:last-child { margin-bottom:0; }
+    .dir-label { width:44px; flex-shrink:0; font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); text-align:right; padding-right:10px; letter-spacing:.04em; white-space:nowrap; }
+
+    .track-row { flex:1; display:flex; align-items:center; height:40px; position:relative; }
+    .track-row::before { content:''; position:absolute; top:50%; left:0; right:0; height:4px; transform:translateY(-50%); background:var(--lc,#888); z-index:0; border-radius:2px; opacity:.55; }
+
+    /* Station cell */
+    .stn-cell { width:80px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; z-index:2; height:40px; }
+    .stn-circle { width:18px; height:18px; border-radius:50%; background:white; border:3px solid var(--lc,#888); flex-shrink:0; }
+    .stn-id { font-family:'DM Mono',monospace; font-size:7.5px; color:var(--muted2); margin-top:3px; white-space:nowrap; letter-spacing:-.01em; }
+
+    /* Block group */
+    .blk-group { flex:1; display:flex; align-items:center; gap:3px; padding:0 4px; position:relative; z-index:1; }
+
+    /* Block cell */
+    .blk-cell { flex:1; min-width:42px; height:28px; background:white; border:1.5px solid var(--lc,#888); border-radius:4px; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:8.5px; color:var(--text2); position:relative; transition:background .18s,border-color .18s,box-shadow .18s; cursor:default; white-space:nowrap; overflow:hidden; }
+    .blk-cell.occupied { background:#fef2f2; border-color:var(--red); box-shadow:0 0 0 2px rgba(220,38,38,.15); color:#b91c1c; }
+    .blk-cell.coupled-occ { background:#f5f3ff; border-color:var(--purple); box-shadow:0 0 0 2px rgba(124,58,237,.15); color:#6d28d9; }
+    .blk-cell.search-hit { background:#eff6ff; border-color:var(--accent); box-shadow:0 0 0 2px rgba(37,99,235,.2); color:#1d4ed8; }
+    .blk-cell.bidir { background:repeating-linear-gradient(45deg,#f8fafc,#f8fafc 3px,#eef2f7 3px,#eef2f7 6px); border-style:dashed; opacity:.6; pointer-events:none; }
+
+    /* Train badge */
+    .train-badge { position:absolute; top:-18px; left:50%; transform:translateX(-50%); background:var(--red); color:white; font-family:'DM Mono',monospace; font-size:9px; border-radius:10px; padding:1px 6px; white-space:nowrap; cursor:pointer; z-index:20; box-shadow:0 1px 4px rgba(220,38,38,.4); transition:transform .15s; animation:badgePop .2s ease; }
+    .train-badge:hover { transform:translateX(-50%) scale(1.15); }
+    .train-badge.coupled-badge { background:var(--purple); box-shadow:0 1px 4px rgba(124,58,237,.4); }
+    @keyframes badgePop { from{transform:translateX(-50%) scale(0)} to{transform:translateX(-50%) scale(1)} }
+
+    /* Track gap between WB/EB */
+    .track-gap { height:6px; }
+
+    /* Closed station overlay */
+    .closed-overlay { position:absolute; inset:0; background:repeating-linear-gradient(45deg,rgba(220,38,38,.06),rgba(220,38,38,.06) 4px,transparent 4px,transparent 12px); pointer-events:none; border-radius:10px; border:2px solid rgba(220,38,38,.3); display:flex; align-items:center; justify-content:center; }
+    .closed-label { background:var(--red); color:white; font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:2px 8px; border-radius:4px; }
+
     /* ── TOAST ── */
     #toast {
       position:fixed; bottom:20px; right:20px;
